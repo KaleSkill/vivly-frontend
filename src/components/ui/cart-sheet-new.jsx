@@ -103,7 +103,7 @@ const CartSheet = ({ children, autoOpen = false }) => {
                           size="sm"
                           variant="outline"
                           className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.colorId, item.size, item.quantity - 1)}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
@@ -112,7 +112,7 @@ const CartSheet = ({ children, autoOpen = false }) => {
                           size="sm"
                           variant="outline"
                           className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.colorId, item.size, item.quantity + 1)}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
@@ -121,7 +121,7 @@ const CartSheet = ({ children, autoOpen = false }) => {
                         size="sm"
                         variant="outline"
                         className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full"
-                        onClick={() => removeFromCart(item.productId)}
+                        onClick={() => removeFromCart(item.productId, item.colorId, item.size)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

@@ -1,5 +1,6 @@
 import Logo from "@/components/logo"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -34,9 +35,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useAuthStore } from "@/store/authstore"
 import { motion } from "framer-motion"
-import { User, Settings, LogOut, Shield, Home, ShoppingCart, Package, ShoppingBag, MapPin, RotateCcw } from "lucide-react"
+import { User, Settings, LogOut, Shield, Home, ShoppingCart, Package, ShoppingBag, MapPin, RotateCcw, Search } from "lucide-react"
 import { ModeToggle } from "../ui/mode-toggle"
 import { CartIcon } from "../ui/cart-button"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useDebounce } from "@/hooks/useDebounce"
 
 // Navigation links array to be used in both desktop and mobile menus
 const navigationLinks = [
@@ -49,6 +53,11 @@ const navigationLinks = [
 
 export default function Component() {
   const { authUser, loginWithGoogle, logout } = useAuthStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  
+  // Debounce search query
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleSignIn = () => {
     loginWithGoogle();
@@ -57,6 +66,21 @@ export default function Component() {
   const handleLogout = () => {
     logout();
   };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
+
+  // Auto-search when debounced query changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(debouncedSearchQuery.trim())}`);
+    }
+  }, [debouncedSearchQuery, navigate]);
 
   const getUserInitials = (user) => {
     if (!user) return "U";
@@ -115,6 +139,23 @@ export default function Component() {
             </NavigationMenu>
           </div>
         </div>
+        
+        {/* Search Bar - Hidden on mobile */}
+        <div className="hidden md:flex flex-1 max-w-lg mx-6">
+          <form onSubmit={handleSearch} className="w-full">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 w-full h-10 bg-background border-border focus:border-primary transition-colors"
+              />
+            </div>
+          </form>
+        </div>
+        
         {/* Right side */}
         <div className="flex items-center gap-2">
           <ModeToggle/>

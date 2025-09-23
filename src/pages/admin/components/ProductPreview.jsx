@@ -10,6 +10,7 @@ import { Badge } from '../../../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Separator } from '../../../components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../../../components/ui/collapsible'
 
 // Icons
 import { 
@@ -30,7 +31,9 @@ import {
   Users,
   TrendingUp,
   CheckCircle,
-  XCircle
+  XCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 
 const ProductPreview = () => {
@@ -42,6 +45,7 @@ const ProductPreview = () => {
   const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false)
 
   // Fetch product data
   useEffect(() => {
@@ -85,6 +89,13 @@ const ProductPreview = () => {
 
   // Get current images
   const currentImages = currentVariant?.images || []
+
+  // Check if description is long (more than 100 characters)
+  const isDescriptionLong = product?.description && product.description.length > 100
+
+  // Get truncated description (first 100 characters)
+  const truncatedDescription = product?.description ? 
+    product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '') : ''
 
   // Calculate discount percentage - use salePrice if on sale, otherwise nonSalePrice
   const currentPrice = product?.isOnSale ? product?.salePrice : product?.nonSalePrice
@@ -202,7 +213,34 @@ const ProductPreview = () => {
             <div className="space-y-4">
               <div>
                 <h1 className="text-3xl font-bold">{product.name}</h1>
-                <p className="text-muted-foreground mt-2">{product.description}</p>
+                {isDescriptionLong ? (
+                  <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
+                    <div className="mt-2">
+                      <p className="text-muted-foreground">
+                        {isDescriptionOpen ? product.description : truncatedDescription}
+                      </p>
+                      <CollapsibleTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mt-2 p-0 h-auto text-primary hover:text-primary/80"
+                        >
+                          {isDescriptionOpen ? (
+                            <>
+                              Show less <ChevronUp className="h-4 w-4 ml-1" />
+                            </>
+                          ) : (
+                            <>
+                              Show more <ChevronDown className="h-4 w-4 ml-1" />
+                            </>
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                    </div>
+                  </Collapsible>
+                ) : (
+                  <p className="text-muted-foreground mt-2">{product.description}</p>
+                )}
               </div>
 
               {/* Rating & Reviews */}

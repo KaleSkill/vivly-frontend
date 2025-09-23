@@ -54,6 +54,11 @@ const ProductCreateStepper = () => {
       price: '',
       discountedPrice: ''
     },
+    salePrice: {
+      price: '',
+      discountedPrice: ''
+    },
+    isOnSale: false,
     specifications: [{ title: '', description: '' }],
     variants: [],
     paymentOptions: {
@@ -69,6 +74,7 @@ const ProductCreateStepper = () => {
   })
   const [uploadedFiles, setUploadedFiles] = useState({})
   const [currentVariantFiles, setCurrentVariantFiles] = useState([])
+  const [imagePreviews, setImagePreviews] = useState([])
 
   const steps = [
     {
@@ -194,6 +200,18 @@ const ProductCreateStepper = () => {
   // Handle file upload for variant
   const handleFileUpload = (files) => {
     setCurrentVariantFiles(files)
+    
+    // Create preview URLs only if files exist
+    if (files && files.length > 0) {
+      const previews = files.map(file => ({
+        name: file.name,
+        url: URL.createObjectURL(file.file),
+        size: file.size
+      }))
+      setImagePreviews(previews)
+    } else {
+      setImagePreviews([])
+    }
   }
 
   // Add variant
@@ -228,6 +246,11 @@ const ProductCreateStepper = () => {
       [currentVariant.color]: currentVariantFiles.map(file => file.file)
     }))
 
+    // Clean up object URLs before reset
+    imagePreviews.forEach(preview => {
+      URL.revokeObjectURL(preview.url)
+    })
+    
     // Reset current variant
     setCurrentVariant({
       color: '',
@@ -235,6 +258,7 @@ const ProductCreateStepper = () => {
       images: []
     })
     setCurrentVariantFiles([])
+    setImagePreviews([])
   }
 
   // Remove variant
@@ -302,6 +326,8 @@ const ProductCreateStepper = () => {
       submitData.append('description', formData.description)
       submitData.append('category', formData.category)
       submitData.append('nonSalePrice', JSON.stringify(formData.nonSalePrice))
+      submitData.append('salePrice', JSON.stringify(formData.salePrice))
+      submitData.append('isOnSale', formData.isOnSale)
       submitData.append('specifications', JSON.stringify(formData.specifications))
       submitData.append('paymentOptions', JSON.stringify(formData.paymentOptions))
       submitData.append('isActive', formData.isActive)
@@ -443,6 +469,49 @@ const ProductCreateStepper = () => {
                 </div>
               </div>
 
+              {/* Sale Pricing */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isOnSale"
+                    checked={formData.isOnSale}
+                    onCheckedChange={(checked) => handleInputChange('isOnSale', checked)}
+                  />
+                  <Label htmlFor="isOnSale">Enable Sale Pricing</Label>
+                </div>
+                
+                {formData.isOnSale && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="salePrice">Sale Original Price (₹) *</Label>
+                      <Input
+                        id="salePrice"
+                        type="number"
+                        value={formData.salePrice.price}
+                        onChange={(e) => handleInputChange('salePrice.price', e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        required={formData.isOnSale}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="saleDiscountedPrice">Sale Discounted Price (₹) *</Label>
+                      <Input
+                        id="saleDiscountedPrice"
+                        type="number"
+                        value={formData.salePrice.discountedPrice}
+                        onChange={(e) => handleInputChange('salePrice.discountedPrice', e.target.value)}
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
+                        required={formData.isOnSale}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
                 <Label>Payment Options</Label>
                 <div className="flex items-center space-x-4">
@@ -561,6 +630,29 @@ const ProductCreateStepper = () => {
                   <p className="text-sm text-muted-foreground">
                     Upload multiple images for this variant
                   </p>
+                  
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Image Previews:</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview.url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
+                              <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                {preview.name}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button type="button" onClick={addVariant} className="w-full">

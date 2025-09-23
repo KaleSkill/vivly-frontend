@@ -10,7 +10,9 @@ import {
   Plus,
   Filter,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Tag,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +20,13 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +46,7 @@ const BannerManagement = () => {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [saleFilter, setSaleFilter] = useState('all')
   const [dragIndex, setDragIndex] = useState(null)
   const [operationLoading, setOperationLoading] = useState({})
   const fileInputRef = useRef(null)
@@ -45,7 +55,16 @@ const BannerManagement = () => {
   const fetchBanners = async () => {
     setLoading(true)
     try {
-      const response = await adminApi.banners.getBanners(filter)
+      let isActiveFilter = filter
+      let saleActiveFilter = saleFilter
+      
+      // Handle sale filter
+      if (filter === 'sale') {
+        isActiveFilter = 'all'
+        saleActiveFilter = 'true'
+      }
+      
+      const response = await adminApi.banners.getBanners(isActiveFilter, saleActiveFilter)
       setBanners(response.data.data || [])
     } catch (error) {
       toast.error('Failed to fetch banners')
@@ -118,6 +137,34 @@ const BannerManagement = () => {
       fetchBanners()
       toast.error('Failed to update banner status')
       console.error('Error toggling banner status:', error)
+    } finally {
+      setOperationLoading(prev => ({ ...prev, [bannerId]: false }))
+    }
+  }
+
+  // Toggle banner sale status
+  const toggleBannerSaleStatus = async (bannerId) => {
+    setOperationLoading(prev => ({ ...prev, [bannerId]: true }))
+    try {
+      // Optimistically update UI first
+      setBanners(prevBanners => 
+        prevBanners.map(banner => 
+          banner._id === bannerId 
+            ? { ...banner, saleActive: !banner.saleActive }
+            : banner
+        )
+      )
+      
+      await adminApi.banners.toggleBannerSaleStatus(bannerId)
+      toast.success('Banner sale status updated')
+      
+      // Refresh to ensure consistency
+      await fetchBanners()
+    } catch (error) {
+      // Revert optimistic update on error
+      fetchBanners()
+      toast.error('Failed to update banner sale status')
+      console.error('Error toggling banner sale status:', error)
     } finally {
       setOperationLoading(prev => ({ ...prev, [bannerId]: false }))
     }
@@ -215,10 +262,11 @@ const BannerManagement = () => {
 
   useEffect(() => {
     fetchBanners()
-  }, [filter])
+  }, [filter, saleFilter])
 
   const activeBanners = banners.filter(banner => banner.isActive)
   const inactiveBanners = banners.filter(banner => !banner.isActive)
+  const saleBanners = banners.filter(banner => banner.saleActive)
 
   return (
     <div className="space-y-6">
@@ -282,53 +330,99 @@ const BannerManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Filter Tabs */}
-      <Tabs value={filter} onValueChange={setFilter}>
-        <TabsList>
-          <TabsTrigger value="all">All Banners ({banners.length})</TabsTrigger>
-          <TabsTrigger value="true">Active ({activeBanners.length})</TabsTrigger>
-          <TabsTrigger value="false">Inactive ({inactiveBanners.length})</TabsTrigger>
-        </TabsList>
+      {/* Filter Dropdowns */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filter Banners
+          </CardTitle>
+          <CardDescription>
+            Filter banners by status and sale settings. Only active banners are shown on the website. Sale status is for future sale features.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 items-center">
+            <div className="flex-1">
+              <Label htmlFor="status-filter">Status Filter</Label>
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger id="status-filter">
+                  <SelectValue placeholder="Select status filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Banners ({banners.length})</SelectItem>
+                  <SelectItem value="true">Active ({activeBanners.length})</SelectItem>
+                  <SelectItem value="false">Inactive ({inactiveBanners.length})</SelectItem>
+                  <SelectItem value="sale">Sale Banners ({saleBanners.length})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex-1">
+              <Label htmlFor="sale-filter">Sale Filter</Label>
+              <Select value={saleFilter} onValueChange={setSaleFilter}>
+                <SelectTrigger id="sale-filter">
+                  <SelectValue placeholder="Select sale filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sale Status</SelectItem>
+                  <SelectItem value="true">Sale Active Only</SelectItem>
+                  <SelectItem value="false">Sale Inactive Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setFilter('all')
+                  setSaleFilter('all')
+                }}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="all" className="space-y-4">
-          <BannerGrid 
-            banners={banners} 
-            onToggleStatus={toggleBannerStatus}
-            onDelete={deleteBanner}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            dragIndex={dragIndex}
-            operationLoading={operationLoading}
-          />
-        </TabsContent>
+      {/* Filter Summary */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="gap-2">
+            <Filter className="h-3 w-3" />
+            Showing {banners.length} banners
+          </Badge>
+          {filter !== 'all' && (
+            <Badge variant="secondary">
+              Status: {filter === 'true' ? 'Active' : filter === 'false' ? 'Inactive' : 'Sale'}
+            </Badge>
+          )}
+          {saleFilter !== 'all' && (
+            <Badge variant="secondary">
+              Sale: {saleFilter === 'true' ? 'Active' : 'Inactive'}
+            </Badge>
+          )}
+        </div>
+      </div>
 
-        <TabsContent value="true" className="space-y-4">
-          <BannerGrid 
-            banners={activeBanners} 
-            onToggleStatus={toggleBannerStatus}
-            onDelete={deleteBanner}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            dragIndex={dragIndex}
-            operationLoading={operationLoading}
-          />
-        </TabsContent>
-
-        <TabsContent value="false" className="space-y-4">
-          <BannerGrid 
-            banners={inactiveBanners} 
-            onToggleStatus={toggleBannerStatus}
-            onDelete={deleteBanner}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            dragIndex={dragIndex}
-            operationLoading={operationLoading}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Banner Grid */}
+      <div className="space-y-4">
+        <BannerGrid 
+          banners={banners} 
+          onToggleStatus={toggleBannerStatus}
+          onToggleSaleStatus={toggleBannerSaleStatus}
+          onDelete={deleteBanner}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          dragIndex={dragIndex}
+          operationLoading={operationLoading}
+        />
+      </div>
     </div>
   )
 }
@@ -337,6 +431,7 @@ const BannerManagement = () => {
 const BannerGrid = ({ 
   banners, 
   onToggleStatus, 
+  onToggleSaleStatus,
   onDelete, 
   onDragStart, 
   onDragOver, 
@@ -385,6 +480,9 @@ const BannerGrid = ({
                   <Badge variant={banner.isActive ? 'default' : 'secondary'}>
                     {banner.isActive ? 'Active' : 'Inactive'}
                   </Badge>
+                  <Badge variant={banner.saleActive ? 'destructive' : 'secondary'} className={banner.saleActive ? 'bg-orange-500 hover:bg-orange-600' : ''}>
+                    {banner.saleActive ? 'Sale Active' : 'Sale Inactive'}
+                  </Badge>
                   <Badge variant="outline">
                     Order: {banner.order}
                   </Badge>
@@ -394,26 +492,48 @@ const BannerGrid = ({
                 </div>
               </div>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    Uploaded: {new Date(banner.createdAt).toLocaleDateString()}
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-500">
+                    {banner.isActive ? '✅ Visible on website' : '❌ Hidden from website'}
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => onToggleStatus(banner._id)}
-                      disabled={operationLoading[banner._id]}
-                      className="h-8 w-8 p-0"
-                    >
-                      {operationLoading[banner._id] ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                      ) : banner.isActive ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
+                  <div className="flex items-center justify-end">
+                    <div className="flex gap-2">
+                    <div className="flex flex-col items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onToggleStatus(banner._id)}
+                        disabled={operationLoading[banner._id]}
+                        className="h-8 w-8 p-0"
+                        title={banner.isActive ? 'Deactivate Banner' : 'Activate Banner'}
+                      >
+                        {operationLoading[banner._id] ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : banner.isActive ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <span className="text-xs text-gray-500">Active</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant={banner.saleActive ? "default" : "outline"}
+                        onClick={() => onToggleSaleStatus(banner._id)}
+                        disabled={operationLoading[banner._id]}
+                        className={`px-3 py-1 text-xs ${banner.saleActive ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'text-gray-600 hover:text-gray-700'}`}
+                        title={banner.saleActive ? 'Disable Sale' : 'Enable Sale'}
+                      >
+                        {operationLoading[banner._id] ? (
+                          <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                        ) : null}
+                        {banner.saleActive ? 'Sale ON' : 'Sale OFF'}
+                      </Button>
+                      <span className="text-xs text-gray-500">Sale</span>
+                    </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
@@ -451,6 +571,7 @@ const BannerGrid = ({
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    </div>
                   </div>
                 </div>
               </CardContent>

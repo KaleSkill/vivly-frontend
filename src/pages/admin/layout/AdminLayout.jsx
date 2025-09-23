@@ -55,8 +55,6 @@ const AdminLayout = () => {
     { name: 'ShipRocket Config', href: '/admin/shiprocket-config', icon: Settings, current: location.pathname === '/admin/shiprocket-config' },
     { name: 'ShipRocket Management', href: '/admin/shiprocket', icon: Truck, current: location.pathname === '/admin/shiprocket' },
     { name: 'ShipRocket Delivery', href: '/admin/shiprocket-delivery', icon: MapPin, current: location.pathname === '/admin/shiprocket-delivery' },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, current: location.pathname === '/admin/analytics' },
-    { name: 'Settings', href: '/admin/settings', icon: Settings, current: location.pathname === '/admin/settings' },
   ]
 
   const getInitials = (name) => {
@@ -181,7 +179,7 @@ const AdminLayout = () => {
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <Badge variant="outline" className="hidden sm:flex items-center gap-1">
-                <Shield className="h-3 w-3" />
+               
                 Admin
               </Badge>
 

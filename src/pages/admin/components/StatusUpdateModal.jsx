@@ -23,17 +23,62 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
     note: ''
   });
 
-  const statusOptions = [
-    { value: 'Ordered', label: 'Ordered', color: 'bg-blue-100 text-blue-800' },
-    { value: 'Shipped', label: 'Shipped', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'Delivered', label: 'Delivered', color: 'bg-green-100 text-green-800' },
-    { value: 'Cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
-    { value: 'Return Requested', label: 'Return Requested', color: 'bg-orange-100 text-orange-800' },
-    { value: 'Departed For Returning', label: 'Departed For Returning', color: 'bg-purple-100 text-purple-800' },
-    { value: 'Returned', label: 'Returned', color: 'bg-purple-100 text-purple-800' },
-    { value: 'Return Cancelled', label: 'Return Cancelled', color: 'bg-gray-100 text-gray-800' },
-    { value: 'Refunded', label: 'Refunded', color: 'bg-gray-100 text-gray-800' }
-  ];
+  // Status progression logic based on backend OrderStatus model
+  const statusProgression = {
+    'Ordered': { 
+      next: ['Cancelled', 'Shipped'], 
+      color: 'bg-blue-100 text-blue-800',
+      icon: '📦'
+    },
+    'Shipped': { 
+      next: ['Delivered'], 
+      color: 'bg-yellow-100 text-yellow-800',
+      icon: '🚚'
+    },
+    'Delivered': { 
+      next: ['Return Requested'], 
+      color: 'bg-green-100 text-green-800',
+      icon: '✅'
+    },
+    'Cancelled': { 
+      next: ['Refunded'], 
+      color: 'bg-red-100 text-red-800',
+      icon: '❌'
+    },
+    'Return Requested': { 
+      next: ['Departed For Returning', 'Return Cancelled'], 
+      color: 'bg-orange-100 text-orange-800',
+      icon: '🔄'
+    },
+    'Departed For Returning': { 
+      next: ['Returned', 'Return Cancelled'], 
+      color: 'bg-purple-100 text-purple-800',
+      icon: '🚛'
+    },
+    'Returned': { 
+      next: ['Refunded'], 
+      color: 'bg-purple-100 text-purple-800',
+      icon: '📦'
+    },
+    'Return Cancelled': { 
+      next: [], 
+      color: 'bg-gray-100 text-gray-800',
+      icon: '🚫'
+    },
+    'Refunded': { 
+      next: [], 
+      color: 'bg-gray-100 text-gray-800',
+      icon: '💰'
+    }
+  };
+
+  const statusOptions = Object.entries(statusProgression).map(([value, config]) => ({
+    value,
+    label: value,
+    color: config.color,
+    icon: config.icon,
+    next: config.next
+  }));
 
   useEffect(() => {
     if (order) {
@@ -173,6 +218,22 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
     return statusOption?.color || 'bg-gray-100 text-gray-800';
   };
 
+  const getValidNextStatuses = (currentStatus) => {
+    const currentStatusConfig = statusProgression[currentStatus];
+    if (!currentStatusConfig) return [];
+    return currentStatusConfig.next;
+  };
+
+  const isStatusValid = (currentStatus, targetStatus) => {
+    const validNextStatuses = getValidNextStatuses(currentStatus);
+    return validNextStatuses.includes(targetStatus);
+  };
+
+  const getStatusIcon = (status) => {
+    const config = statusProgression[status];
+    return config?.icon || '📦';
+  };
+
   if (!order) return null;
 
   return (
@@ -246,8 +307,40 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
                     <AlertCircle className="h-5 w-5" />
                     Update Status for {selectedItem.productName}
                   </CardTitle>
+                  <div className="text-sm text-muted-foreground">
+                    Current Status: <Badge className={getStatusBadgeColor(selectedItem.currentStatus)}>
+                      {getStatusIcon(selectedItem.currentStatus)} {selectedItem.currentStatus}
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Status Progression Visual */}
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <h4 className="font-medium mb-3">Available Next Statuses:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getValidNextStatuses(selectedItem.currentStatus).map((status) => {
+                        const config = statusProgression[status];
+                        return (
+                          <Button
+                            key={status}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setUpdateData(prev => ({ ...prev, newStatus: status }))}
+                            className={`${config.color} hover:opacity-80`}
+                          >
+                            <span className="mr-1">{config.icon}</span>
+                            {status}
+                          </Button>
+                        );
+                      })}
+                      {getValidNextStatuses(selectedItem.currentStatus).length === 0 && (
+                        <div className="text-sm text-muted-foreground italic">
+                          No further status changes available (Final status reached)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="quantity">Quantity</Label>
@@ -267,11 +360,23 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
                           <SelectValue placeholder="Select new status" />
                         </SelectTrigger>
                         <SelectContent>
-                          {statusOptions.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
+                          {statusOptions
+                            .filter((status) => isStatusValid(selectedItem.currentStatus, status.value))
+                            .map((status) => (
+                              <SelectItem key={status.value} value={status.value}>
+                                <div className="flex items-center gap-2">
+                                  <span>{status.icon}</span>
+                                  <span>{status.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          {getValidNextStatuses(selectedItem.currentStatus).length === 0 && (
+                            <SelectItem value="" disabled>
+                              <div className="text-muted-foreground italic">
+                                No further status changes available
+                              </div>
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -321,25 +426,58 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
               </Card>
             )}
 
-            {/* Current Status Info */}
+            {/* Status Progression Timeline */}
             {selectedItem && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Status Information</CardTitle>
+                  <CardTitle>Status Progression Timeline</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <p><strong>Product:</strong> {selectedItem.productName}</p>
-                    <p><strong>Current Status:</strong> 
-                      <Badge className={`ml-2 ${getStatusBadgeColor(selectedItem.currentStatus)}`}>
-                        {selectedItem.currentStatus}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium">Current Status:</span>
+                      <Badge className={getStatusBadgeColor(selectedItem.currentStatus)}>
+                        {getStatusIcon(selectedItem.currentStatus)} {selectedItem.currentStatus}
                       </Badge>
-                    </p>
-                    <p><strong>Quantity:</strong> {selectedItem.quantity}</p>
-                    <p><strong>Size:</strong> {selectedItem.size}</p>
-                    {selectedItem.amount && (
-                      <p><strong>Amount:</strong> ₹{selectedItem.amount.totalAmount}</p>
-                    )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Possible Next Steps:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {getValidNextStatuses(selectedItem.currentStatus).map((status, index) => {
+                          const config = statusProgression[status];
+                          return (
+                            <div key={status} className="flex items-center gap-2">
+                              {index > 0 && <span className="text-muted-foreground">→</span>}
+                              <Badge variant="outline" className={config.color}>
+                                {config.icon} {status}
+                              </Badge>
+                            </div>
+                          );
+                        })}
+                        {getValidNextStatuses(selectedItem.currentStatus).length === 0 && (
+                          <div className="text-sm text-muted-foreground italic">
+                            Final status reached - no further changes possible
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p><strong>Product:</strong> {selectedItem.productName}</p>
+                          <p><strong>Quantity:</strong> {selectedItem.quantity}</p>
+                          <p><strong>Size:</strong> {selectedItem.size}</p>
+                        </div>
+                        <div>
+                          {selectedItem.amount && (
+                            <p><strong>Amount:</strong> ₹{selectedItem.amount.totalAmount}</p>
+                          )}
+                          <p><strong>Color:</strong> {selectedItem.color?.name || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

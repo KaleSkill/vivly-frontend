@@ -237,7 +237,14 @@ const MyOrdersPage = () => {
                     {/* Payment Method */}
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs">{order.paymentMethod}</span>
+                      <span className="text-xs">
+                        {order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}
+                      </span>
+                      {order.transactionId && (
+                        <span className="text-xs bg-muted px-1 py-0.5 rounded text-muted-foreground">
+                          Txn: {order.transactionId.substring(0, 8)}...
+                        </span>
+                      )}
                     </div>
                     
                     {/* Total and Actions */}

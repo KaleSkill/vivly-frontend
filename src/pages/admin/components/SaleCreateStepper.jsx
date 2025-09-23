@@ -11,8 +11,6 @@ import { Label } from '../../../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card'
 import { Badge } from '../../../components/ui/badge'
-import UploaderComp from '../../../components/ui/uploader-comp'
-
 // Icons
 import { 
   Plus,
@@ -22,7 +20,8 @@ import {
   Percent,
   Calendar,
   Package,
-  Image
+  CheckCircle,
+  X
 } from 'lucide-react'
 
 const SaleCreateStepper = () => {
@@ -31,12 +30,11 @@ const SaleCreateStepper = () => {
   const [products, setProducts] = useState([])
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     products: [],
     startDate: '',
-    endDate: '',
-    banner_image: null
+    endDate: ''
   })
-  const [bannerFiles, setBannerFiles] = useState([])
 
   // Fetch products
   useEffect(() => {
@@ -59,10 +57,6 @@ const SaleCreateStepper = () => {
     }))
   }
 
-  // Handle banner file upload
-  const handleBannerUpload = (files) => {
-    setBannerFiles(files)
-  }
 
   // Add product to sale
   const addProduct = (productId) => {
@@ -92,19 +86,15 @@ const SaleCreateStepper = () => {
       return
     }
 
-    if (!bannerFiles || bannerFiles.length === 0) {
-      toast.error('Please upload a banner image')
-      return
-    }
-
     setLoading(true)
     try {
-      const submitData = new FormData()
-      submitData.append('name', formData.name)
-      submitData.append('products', JSON.stringify(formData.products))
-      submitData.append('startDate', formData.startDate)
-      submitData.append('endDate', formData.endDate)
-      submitData.append('banner_image', bannerFiles[0].file)
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        products: formData.products.map(p => p._id),
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      }
 
       const response = await adminApi.sales.createSale(submitData)
       toast.success('Sale created successfully!')
@@ -158,6 +148,16 @@ const SaleCreateStepper = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Enter sale description (optional)"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">Start Date *</Label>
@@ -192,31 +192,25 @@ const SaleCreateStepper = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Add Products *</Label>
-                <Select onValueChange={addProduct}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select products to add to sale" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map(product => (
-                      <SelectItem key={product._id} value={product._id}>
-                        {product.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              {/* Selected Products */}
-              {formData.products.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Selected Products ({formData.products.length})</Label>
-                  <div className="space-y-2">
-                    {formData.products.map((product, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+              {/* Available Products Grid */}
+              <div className="space-y-2">
+                <Label>Available Products ({products.length})</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {products.map((product) => {
+                    const isSelected = formData.products.find(p => p._id === product._id);
+                    return (
+                      <div
+                        key={product._id}
+                        className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                            : 'hover:border-primary/50 hover:bg-muted/50'
+                        }`}
+                        onClick={() => isSelected ? removeProduct(product._id) : addProduct(product._id)}
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
+                          <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             {product.variants?.[0]?.orderImage?.secure_url ? (
                               <img
                                 src={product.variants[0].orderImage.secure_url}
@@ -225,26 +219,56 @@ const SaleCreateStepper = () => {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <Package className="h-6 w-6 text-muted-foreground" />
+                                <Package className="h-8 w-8 text-muted-foreground" />
                               </div>
                             )}
                           </div>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-muted-foreground">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">
                               {product.variants?.length || 0} variants
                             </p>
+                            <p className="text-xs text-muted-foreground">
+                              ₹{typeof product.nonSalePrice === 'object' ? product.nonSalePrice?.price || 'N/A' : product.nonSalePrice || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {isSelected ? (
+                              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                                <CheckCircle className="h-4 w-4" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30" />
+                            )}
                           </div>
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected Products Summary */}
+              {formData.products.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Selected Products ({formData.products.length})</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.products.map((product) => (
+                      <Badge key={product._id} variant="secondary" className="gap-1">
+                        {product.name}
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => removeProduct(product._id)}
+                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeProduct(product._id);
+                          }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </Button>
-                      </div>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -252,29 +276,6 @@ const SaleCreateStepper = () => {
             </CardContent>
           </Card>
 
-          {/* Banner Image */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Image className="h-5 w-5" />
-                Banner Image
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Banner Image *</Label>
-                <UploaderComp
-                  maxSizeMB={5}
-                  maxFiles={1}
-                  onFilesChange={handleBannerUpload}
-                  initialFiles={[]}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Upload a banner image for this sale
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Submit Buttons */}
           <div className="flex justify-end gap-2">

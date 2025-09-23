@@ -21,6 +21,8 @@ export const OrderDetailsPage = () => {
     }
   }, [orderId]);
 
+  console.log("order details", orderDetails);
+
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
@@ -110,7 +112,7 @@ export const OrderDetailsPage = () => {
               Order Details - {orderDetails.orderId}
             </h1>
             <p className="text-muted-foreground">
-              Customer: {orderDetails.products?.[0]?.user?.name || 'Unknown'} | 
+              Customer: {orderDetails.user?.name || orderDetails.products?.[0]?.user?.name || 'Unknown'} | 
               Status: <Badge className={getStatusBadgeColor(orderDetails.overallStatus)}>
                 {orderDetails.overallStatus}
               </Badge>
@@ -167,6 +169,11 @@ export const OrderDetailsPage = () => {
               <Badge className={getPaymentStatusBadgeColor(orderDetails.paymentStatus)}>
                 {orderDetails.paymentStatus}
               </Badge>
+              {orderDetails.paymentProvider && (
+                <div className="text-xs text-muted-foreground">
+                  Provider: {orderDetails.paymentProvider}
+                </div>
+              )}
               {orderDetails.transactionId && (
                 <div className="text-xs text-muted-foreground">
                   TXN: {orderDetails.transactionId}
@@ -186,12 +193,18 @@ export const OrderDetailsPage = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span className="text-sm">{orderDetails.products?.[0]?.user?.name || 'Unknown'}</span>
+                <span className="text-sm">{orderDetails.user?.name || orderDetails.products?.[0]?.user?.name || 'Unknown Customer'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span className="text-sm">{orderDetails.products?.[0]?.user?.email || 'Unknown'}</span>
+                <span className="text-sm">{orderDetails.user?.email || orderDetails.products?.[0]?.user?.email || 'No email'}</span>
               </div>
+              {orderDetails.shippingInfo?.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  <span className="text-sm">{orderDetails.shippingInfo.phone}</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

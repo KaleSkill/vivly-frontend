@@ -164,18 +164,14 @@ const UserLayout = () => {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              <Badge variant="outline" className="hidden sm:flex items-center gap-1">
-                <User className="h-3 w-3" />
-                User
-              </Badge>
-
+        
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={authUser?.profile} alt={authUser?.firstname} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                        {authUser?.firstname ? getInitials(authUser.firstname + ' ' + authUser.lastname) : 'U'}
+                        {authUser?.firstname ? getInitials(authUser.firstname) : 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -183,7 +179,7 @@ const UserLayout = () => {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{authUser?.firstname} {authUser?.lastname}</p>
+                      <p className="text-sm font-medium leading-none">{authUser?.firstname}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {authUser?.email}
                       </p>

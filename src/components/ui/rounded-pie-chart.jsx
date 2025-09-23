@@ -15,75 +15,75 @@ import { TrendingUp } from "lucide-react";
 
 export const description = "A pie chart with a label list";
 
-const chartData = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 187, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 90, fill: "var(--color-other)" },
+const defaultChartData = [
+  { category: "Electronics", count: 275, fill: "var(--color-electronics)" },
+  { category: "Clothing", count: 200, fill: "var(--color-clothing)" },
+  { category: "Accessories", count: 187, fill: "var(--color-accessories)" },
+  { category: "Home", count: 173, fill: "var(--color-home)" },
+  { category: "Sports", count: 90, fill: "var(--color-sports)" },
 ];
 
 const chartConfig = {
-  visitors: {
-    label: "Visitors",
+  count: {
+    label: "Products",
   },
 
-  chrome: {
-    label: "Chrome",
+  electronics: {
+    label: "Electronics",
     color: "var(--chart-1)",
   },
 
-  safari: {
-    label: "Safari",
+  clothing: {
+    label: "Clothing",
     color: "var(--chart-2)",
   },
 
-  firefox: {
-    label: "Firefox",
+  accessories: {
+    label: "Accessories",
     color: "var(--chart-3)",
   },
 
-  edge: {
-    label: "Edge",
+  home: {
+    label: "Home",
     color: "var(--chart-4)",
   },
 
-  other: {
-    label: "Other",
+  sports: {
+    label: "Sports",
     color: "var(--chart-5)",
   }
 };
 
-export function RoundedPieChart() {
+export function RoundedPieChart({ data = defaultChartData, title = "Product Categories", subtitle = "Distribution by category", growthRate = "5.2%" }) {
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>
-          Pie Chart
+          {title}
           <Badge
             variant="outline"
             className="text-green-500 bg-green-500/10 border-none ml-2">
             <TrendingUp className="h-4 w-4" />
-            <span>5.2%</span>
+            <span>{growthRate}</span>
           </Badge>
         </CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardDescription>{subtitle}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
           className="[&_.recharts-text]:fill-background mx-auto aspect-square max-h-[250px]">
           <PieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey="visitors" hideLabel />} />
+            <ChartTooltip content={<ChartTooltipContent nameKey="count" hideLabel />} />
             <Pie
-              data={chartData}
+              data={data}
               innerRadius={30}
-              dataKey="visitors"
+              dataKey="count"
               radius={10}
               cornerRadius={8}
               paddingAngle={4}>
               <LabelList
-                dataKey="visitors"
+                dataKey="count"
                 stroke="none"
                 fontSize={12}
                 fontWeight={500}

@@ -1,3 +1,4 @@
+import React from "react"
 import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react"
 
 import {
@@ -6,32 +7,10 @@ import {
 } from "@/hooks/use-file-upload"
 import { Button } from "@/components/ui/button"
 
-// Create some dummy initial files
-const initialFiles = [
-  {
-    name: "image-01.jpg",
-    size: 1528737,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=1",
-    id: "image-01-123456789",
-  },
-  {
-    name: "image-02.jpg",
-    size: 2345678,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=2",
-    id: "image-02-123456789",
-  },
-  {
-    name: "image-03.jpg",
-    size: 3456789,
-    type: "image/jpeg",
-    url: "https://picsum.photos/1000/800?grayscale&random=3",
-    id: "image-03-123456789",
-  },
-]
+// Start with no initial files
+const initialFiles = []
 
-export default function Component() {
+export default function UploaderComp({ onUpload, multiple = true, accept = "image/*" }) {
   const maxSizeMB = 5
   const maxSize = maxSizeMB * 1024 * 1024 // 5MB default
   const maxFiles = 6
@@ -49,12 +28,19 @@ export default function Component() {
       getInputProps,
     },
   ] = useFileUpload({
-    accept: "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
+    accept: accept,
     maxSize,
-    multiple: true,
+    multiple: multiple,
     maxFiles,
     initialFiles,
   })
+
+  // Call onUpload when files change
+  React.useEffect(() => {
+    if (onUpload && files.length > 0) {
+      onUpload(files)
+    }
+  }, [files, onUpload])
 
   return (
     <div className="flex flex-col gap-2">
@@ -127,7 +113,7 @@ export default function Component() {
           ))}
 
           {/* Remove all files button */}
-          {files.length > 1 && (
+          {files.length > 0 && (
             <div>
               <Button size="sm" variant="outline" onClick={clearFiles}>
                 Remove all files

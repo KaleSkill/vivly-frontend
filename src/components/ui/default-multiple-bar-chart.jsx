@@ -13,43 +13,43 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Badge } from "@/components/ui/badge";
 import { TrendingDown } from "lucide-react";
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+const defaultChartData = [
+  { month: "January", users: 186, growth: 80 },
+  { month: "February", users: 305, growth: 200 },
+  { month: "March", users: 237, growth: 120 },
+  { month: "April", users: 73, growth: 190 },
+  { month: "May", users: 209, growth: 130 },
+  { month: "June", users: 214, growth: 140 },
 ];
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  users: {
+    label: "Users",
     color: "var(--chart-1)",
   },
 
-  mobile: {
-    label: "Mobile",
+  growth: {
+    label: "Growth",
     color: "var(--chart-2)",
   }
 };
 
-export function DefaultMultipleBarChart() {
+export function DefaultMultipleBarChart({ data = defaultChartData, title = "User Growth", subtitle = "January - June 2025", growthRate = "+12.5%" }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          Bar Chart - Multiple{" "}
-          <Badge variant="outline" className="text-red-500 bg-red-500/10 border-none ml-2">
+          {title}{" "}
+          <Badge variant="outline" className="text-green-500 bg-green-500/10 border-none ml-2">
             <TrendingDown className="h-4 w-4" />
-            <span>-5.2%</span>
+            <span>{growthRate}</span>
           </Badge>
         </CardTitle>
-        <CardDescription>January - June 2025</CardDescription>
+        <CardDescription>{subtitle}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
+          <BarChart accessibilityLayer data={data}>
             <rect
               x="0"
               y="0"
@@ -66,8 +66,8 @@ export function DefaultMultipleBarChart() {
               axisLine={false}
               tickFormatter={(value) => value.slice(0, 3)} />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dashed" />} />
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+            <Bar dataKey="users" fill="var(--color-users)" radius={4} />
+            <Bar dataKey="growth" fill="var(--color-growth)" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>

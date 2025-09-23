@@ -1,17 +1,21 @@
-import React from 'react'
+import React, { useCallback, useRef, useEffect } from "react"
 import { AlertCircleIcon, ImageIcon, UploadIcon, XIcon } from "lucide-react"
-import { formatBytes, useFileUpload } from "../../hooks/use-file-upload"
-import { Button } from "./button"
 
-const UploaderComp = ({ 
-  maxSizeMB = 5, 
-  maxFiles = 6, 
-  accept = "image/svg+xml,image/png,image/jpeg,image/jpg,image/gif",
-  initialFiles = [],
-  onFilesChange,
-  className = ""
-}) => {
-  const maxSize = maxSizeMB * 1024 * 1024 // Convert MB to bytes
+import {
+  formatBytes,
+  useFileUpload,
+} from "@/hooks/use-file-upload"
+import { Button } from "@/components/ui/button"
+
+export default function UploaderComp({ onUpload, multiple = true, accept = "image/*" }) {
+  const maxSizeMB = 5
+  const maxSize = maxSizeMB * 1024 * 1024 // 5MB default
+  const maxFiles = 6
+  const previousFilesLengthRef = useRef(0)
+  const isProcessingRef = useRef(false)
+
+  // Start with no initial files
+  const initialFiles = []
 
   const [
     { files, isDragging, errors },
@@ -26,22 +30,42 @@ const UploaderComp = ({
       getInputProps,
     },
   ] = useFileUpload({
-    accept,
+    accept: accept,
     maxSize,
-    multiple: true,
+    multiple: multiple,
     maxFiles,
     initialFiles,
   })
 
-  // Notify parent component when files change
-  React.useEffect(() => {
-    if (onFilesChange) {
-      onFilesChange(files)
+  // Stable callback to prevent infinite loops
+  const stableOnUpload = useCallback((filesToUpload) => {
+    if (onUpload) {
+      onUpload(filesToUpload)
     }
-  }, [files, onFilesChange])
+  }, [onUpload])
+
+  // Call onUpload when files change (with proper dependency management)
+  useEffect(() => {
+    if (isProcessingRef.current) return
+    
+    if (files.length !== previousFilesLengthRef.current) {
+      isProcessingRef.current = true
+      previousFilesLengthRef.current = files.length
+      
+      if (files.length > 0) {
+        // Use setTimeout to break the render cycle
+        setTimeout(() => {
+          stableOnUpload(files)
+          isProcessingRef.current = false
+        }, 0)
+      } else {
+        isProcessingRef.current = false
+      }
+    }
+  }, [files.length, stableOnUpload])
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className="flex flex-col gap-2">
       {/* Drop area */}
       <div
         onDragEnter={handleDragEnter}
@@ -50,14 +74,13 @@ const UploaderComp = ({
         onDrop={handleDrop}
         data-dragging={isDragging || undefined}
         data-files={files.length > 0 || undefined}
-        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]"
-      >
+        className="border-input data-[dragging=true]:bg-accent/50 has-[input:focus]:border-ring has-[input:focus]:ring-ring/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center has-[input:focus]:ring-[3px]">
         <input {...getInputProps()} className="sr-only" aria-label="Upload image file" />
-        <div className="flex flex-col items-center justify-center px-4 py-3 text-center">
+        <div
+          className="flex flex-col items-center justify-center px-4 py-3 text-center">
           <div
             className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
-            aria-hidden="true"
-          >
+            aria-hidden="true">
             <ImageIcon className="size-4 opacity-60" />
           </div>
           <p className="mb-1.5 text-sm font-medium">Drop your images here</p>
@@ -70,29 +93,25 @@ const UploaderComp = ({
           </Button>
         </div>
       </div>
-      
       {errors.length > 0 && (
         <div className="text-destructive flex items-center gap-1 text-xs" role="alert">
           <AlertCircleIcon className="size-3 shrink-0" />
           <span>{errors[0]}</span>
         </div>
       )}
-      
       {/* File list */}
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((file) => (
             <div
               key={file.id}
-              className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3"
-            >
+              className="bg-background flex items-center justify-between gap-2 rounded-lg border p-2 pe-3">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="bg-accent aspect-square shrink-0 rounded">
                   <img
                     src={file.preview}
                     alt={file.file.name}
-                    className="size-10 rounded-[inherit] object-cover"
-                  />
+                    className="size-10 rounded-[inherit] object-cover" />
                 </div>
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <p className="truncate text-[13px] font-medium">
@@ -109,15 +128,14 @@ const UploaderComp = ({
                 variant="ghost"
                 className="text-muted-foreground/80 hover:text-foreground -me-2 size-8 hover:bg-transparent"
                 onClick={() => removeFile(file.id)}
-                aria-label="Remove file"
-              >
+                aria-label="Remove file">
                 <XIcon aria-hidden="true" />
               </Button>
             </div>
           ))}
 
           {/* Remove all files button */}
-          {files.length > 1 && (
+          {files.length > 0 && (
             <div>
               <Button size="sm" variant="outline" onClick={clearFiles}>
                 Remove all files
@@ -126,8 +144,7 @@ const UploaderComp = ({
           )}
         </div>
       )}
+     
     </div>
-  )
+  );
 }
-
-export default UploaderComp

@@ -32,7 +32,7 @@ export const useCartStore = create(
 
           if (existingItem) {
             // Update quantity if item exists
-            await userApi.cart.updateQuantity(existingItem.productId, existingItem.quantity + quantity)
+            await userApi.cart.updateQuantity(existingItem.productId, colorId, size, existingItem.quantity + quantity)
             set(state => ({
               items: state.items.map(item =>
                 item.productId === product._id && item.colorId === colorId && item.size === size
@@ -60,11 +60,11 @@ export const useCartStore = create(
               originalPrice: product.isOnSale && product.nonSalePrice
                 ? parseFloat(product.nonSalePrice.discountedPrice || product.nonSalePrice.price || 0)
                 : null,
-              image: product.variants?.find(v => v.color._id === colorId)?.images?.[0]?.secure_url || 
+              image: product.variants?.find(v => v.color?._id === colorId)?.images?.[0]?.secure_url || 
                      product.variants?.[0]?.images?.[0]?.secure_url || 
                      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop",
               colorId: colorId,
-              colorName: product.variants?.find(v => v.color._id === colorId)?.color?.name || 'Unknown',
+              colorName: product.variants?.find(v => v.color?._id === colorId)?.color?.name || 'Unknown',
               size: size,
               quantity: quantity,
               isOnSale: product.isOnSale
@@ -87,7 +87,7 @@ export const useCartStore = create(
         }
       },
 
-      removeFromCart: async (productId) => {
+      removeFromCart: async (productId, colorId, size) => {
         try {
           // Check authentication
           const token = localStorage.getItem('token')
@@ -96,10 +96,12 @@ export const useCartStore = create(
             return
           }
           
-          await userApi.cart.removeFromCart(productId)
+          await userApi.cart.removeFromCart(productId, colorId, size)
           
           set(state => ({
-            items: state.items.filter(item => item.productId !== productId)
+            items: state.items.filter(item => 
+              !(item.productId === productId && item.colorId === colorId && item.size === size)
+            )
           }))
           
           toast.success('Item removed from cart!')
@@ -110,15 +112,15 @@ export const useCartStore = create(
         }
       },
 
-      updateQuantity: async (productId, newQuantity) => {
+      updateQuantity: async (productId, colorId, size, newQuantity) => {
         if (newQuantity < 1) return
         
         try {
-          await userApi.cart.updateQuantity(productId, newQuantity)
+          await userApi.cart.updateQuantity(productId, colorId, size, newQuantity)
           
           set(state => ({
             items: state.items.map(item =>
-              item.productId === productId
+              item.productId === productId && item.colorId === colorId && item.size === size
                 ? { ...item, quantity: newQuantity }
                 : item
             )

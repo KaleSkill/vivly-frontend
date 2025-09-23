@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { adminApi } from '@/api/api';
+import { adminApi, authApi } from '@/api/api';
 import { toast } from 'sonner';
 import { Search, Eye, Filter, RefreshCw, Package, CreditCard, Truck, MoreHorizontal, Settings } from 'lucide-react';
 import { StatusUpdateModal } from './StatusUpdateModal';
@@ -21,6 +21,8 @@ export const OrderManagement = () => {
   const [statusSummary, setStatusSummary] = useState({});
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userDetails, setUserDetails] = useState({});
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   
   // Filters
   const [filters, setFilters] = useState({
@@ -40,6 +42,7 @@ export const OrderManagement = () => {
       });
 
       const response = await adminApi.newOrders.getAllOrders(params.toString());
+      console.log("order seeeee", response.data.data)
       
       if (response.data.success) {
         setOrders(response.data.data);
@@ -54,9 +57,49 @@ export const OrderManagement = () => {
     }
   };
 
+  // Get user details by ID
+  const getUserDetails = async (id) => {
+    try {
+      const response = await authApi.getUserDetails(id);
+      console.log("user details", response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      return null;
+    }
+  }
+   
+
   useEffect(() => {
     fetchOrders();
   }, [page, filters]);
+
+  // Fetch user details when orders are loaded
+  useEffect(() => {
+    const fetchUserDetailsForOrders = async () => {
+      if (orders.length > 0) {
+        setLoadingUserDetails(true);
+        const userDetailsMap = {};
+        for (const order of orders) {
+          if (order.user?._id && !userDetailsMap[order.user._id]) {
+            const userData = await getUserDetails(order.user._id);
+            if (userData) {
+              userDetailsMap[order.user._id] = userData;
+            }
+          }
+        }
+        setUserDetails(userDetailsMap);
+        setLoadingUserDetails(false);
+      }
+    };
+
+    fetchUserDetailsForOrders();
+  }, [orders]);
+
+
+
+
+
 
   const handleStatusFilter = (status) => {
     setFilters(prev => ({ ...prev, status }));
@@ -217,8 +260,20 @@ export const OrderManagement = () => {
                       <TableCell className="font-medium">{order.orderId}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{order.user?.name}</p>
-                          <p className="text-sm text-muted-foreground">{order.user?.email}</p>
+                          <p className="font-medium">
+                            {loadingUserDetails ? (
+                              <span className="text-muted-foreground">Loading...</span>
+                            ) : userDetails[order.user?._id]?.firstname 
+                              ? `${userDetails[order.user._id].firstname}`
+                              : userDetails[order.user?._id]?.firstname || 'Unknown Customer'
+                            }
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {userDetails[order.user?._id]?.email || order.user?.email || 'No email'}
+                          </p>
+                          {order.shippingInfo?.phone && (
+                            <p className="text-xs text-muted-foreground">📞 {order.shippingInfo.phone}</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -235,6 +290,16 @@ export const OrderManagement = () => {
                             <Badge className={getPaymentStatusBadgeColor(order.paymentStatus)}>
                               {order.paymentStatus}
                             </Badge>
+                            {order.transactionId && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                TXN: {order.transactionId}
+                              </p>
+                            )}
+                            {order.paymentProvider && (
+                              <p className="text-xs text-muted-foreground">
+                                Via: {order.paymentProvider}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </TableCell>

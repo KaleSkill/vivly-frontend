@@ -5,16 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
-  ArrowRight, 
-  ShoppingBag, 
+  ArrowRight,  
   Heart, 
   Star,
-  TrendingUp,
   Sparkles
 } from 'lucide-react'
 import { userApi } from '@/api/api'
 import { toast } from 'sonner'
-import { useCartStore } from '@/store/cartStore'
 import { CartButton } from '@/components/ui/cart-button'
 
 const ModernHomePage = () => {
@@ -92,27 +89,16 @@ const ModernHomePage = () => {
     return null
   }
 
-  // Check authentication helper
-  const checkAuth = () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      toast.error('Please login to add products to cart')
-      navigate('/login')
-      return false
-    }
-    return true
-  }
-
   return (
     <div className="min-h-screen bg-background">
       {/* Banner Carousel */}
       <section className="relative overflow-hidden">
         {loading ? (
-          <div className="h-64 md:h-80 lg:h-96 bg-muted animate-pulse flex items-center justify-center">
+          <div className="h-48 sm:h-64 md:h-80 lg:h-96 bg-muted animate-pulse flex items-center justify-center">
             <p className="text-muted-foreground">Loading banners...</p>
           </div>
         ) : banners.length > 0 ? (
-          <div className="relative h-64 md:h-80 lg:h-96">
+          <div className="relative h-48 sm:h-64 md:h-80 lg:h-96">
             {banners.map((banner, index) => (
               <motion.div
                 key={banner._id}
@@ -145,7 +131,7 @@ const ModernHomePage = () => {
             )}
           </div>
         ) : (
-          <div className="h-64 md:h-80 lg:h-96 bg-muted flex items-center justify-center">
+          <div className="h-48 sm:h-64 md:h-80 lg:h-96 bg-muted flex items-center justify-center">
             <p className="text-muted-foreground">No banners available</p>
           </div>
         )}
@@ -170,13 +156,12 @@ const ModernHomePage = () => {
               </p>
             </motion.div>
           </div>
-
           {loading ? (
-            <div className="flex gap-6 justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="overflow-hidden w-64">
+                <Card key={i} className="overflow-hidden">
                   <div className="aspect-square bg-muted animate-pulse" />
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 md:p-4">
                     <div className="h-4 bg-muted rounded animate-pulse mb-2" />
                     <div className="h-3 bg-muted rounded animate-pulse w-2/3 mb-3" />
                     <div className="h-8 bg-muted rounded animate-pulse" />
@@ -185,14 +170,14 @@ const ModernHomePage = () => {
               ))}
             </div>
           ) : featuredProducts.length > 0 ? (
-            <div className="flex gap-6 justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
               {featuredProducts.map((product, index) => (
                 <motion.div
                   key={product._id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="w-64"
+                  className="w-full"
                 >
                   <Card 
                     className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
@@ -219,11 +204,11 @@ const ModernHomePage = () => {
                         </Button>
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
+                    <CardContent className="p-3 md:p-4">
+                      <h3 className="font-semibold mb-2 line-clamp-2 text-sm md:text-base">{product.name}</h3>
                       
-                      {/* Colors Display */}
-                      <div className="flex items-center gap-2 mb-2">
+                      {/* Colors Display - Hidden on mobile to save space */}
+                      <div className="hidden md:flex items-center gap-2 mb-2">
                         <span className="text-sm text-muted-foreground">Colors:</span>
                         <div className="flex gap-1">
                           {product.variants?.slice(0, 3).map((variant, idx) => (
@@ -253,11 +238,11 @@ const ModernHomePage = () => {
 
                       {/* Pricing */}
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-bold">
+                        <span className="text-base md:text-lg font-bold">
                           {formatPrice(getProductPrice(product))}
                         </span>
                         {getOriginalPrice(product) && (
-                          <span className="text-sm text-muted-foreground line-through">
+                          <span className="text-xs md:text-sm text-muted-foreground line-through">
                             {formatPrice(getOriginalPrice(product))}
                           </span>
                         )}
@@ -269,7 +254,7 @@ const ModernHomePage = () => {
                           colorId={product.variants?.[0]?.color?._id}
                           size={product.variants?.[0]?.sizes?.[0]?.size}
                           quantity={1}
-                          className="text-sm"
+                          className="text-xs md:text-sm w-full"
                         />
                       </div>
                     </CardContent>
@@ -283,17 +268,6 @@ const ModernHomePage = () => {
             </div>
           )}
 
-          {/* Circular View All Button */}
-          <div className="flex justify-center mt-8">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate('/products')}
-              className="rounded-full w-16 h-16 p-0 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-            >
-              <ArrowRight className="h-6 w-6" />
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -318,11 +292,11 @@ const ModernHomePage = () => {
           </div>
 
           {loading ? (
-            <div className="flex gap-6 justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
               {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="overflow-hidden w-64">
+                <Card key={i} className="overflow-hidden">
                   <div className="aspect-square bg-muted animate-pulse" />
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 md:p-4">
                     <div className="h-4 bg-muted rounded animate-pulse mb-2" />
                     <div className="h-3 bg-muted rounded animate-pulse w-2/3 mb-3" />
                     <div className="h-8 bg-muted rounded animate-pulse" />
@@ -331,14 +305,14 @@ const ModernHomePage = () => {
               ))}
             </div>
           ) : newArrivals.length > 0 ? (
-            <div className="flex gap-6 justify-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
               {newArrivals.map((product, index) => (
                 <motion.div
                   key={product._id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="w-64"
+                  className="w-full"
                 >
                   <Card 
                     className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
@@ -365,11 +339,11 @@ const ModernHomePage = () => {
                         </Button>
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
+                    <CardContent className="p-3 md:p-4">
+                      <h3 className="font-semibold mb-2 line-clamp-2 text-sm md:text-base">{product.name}</h3>
                       
-                      {/* Colors Display */}
-                      <div className="flex items-center gap-2 mb-2">
+                      {/* Colors Display - Hidden on mobile to save space */}
+                      <div className="hidden md:flex items-center gap-2 mb-2">
                         <span className="text-sm text-muted-foreground">Colors:</span>
                         <div className="flex gap-1">
                           {product.variants?.slice(0, 3).map((variant, idx) => (
@@ -399,11 +373,11 @@ const ModernHomePage = () => {
 
                       {/* Pricing */}
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-bold">
+                        <span className="text-base md:text-lg font-bold">
                           {formatPrice(getProductPrice(product))}
                         </span>
                         {getOriginalPrice(product) && (
-                          <span className="text-sm text-muted-foreground line-through">
+                          <span className="text-xs md:text-sm text-muted-foreground line-through">
                             {formatPrice(getOriginalPrice(product))}
                           </span>
                         )}
@@ -415,7 +389,7 @@ const ModernHomePage = () => {
                           colorId={product.variants?.[0]?.color?._id}
                           size={product.variants?.[0]?.sizes?.[0]?.size}
                           quantity={1}
-                          className="text-sm"
+                          className="text-xs md:text-sm w-full"
                         />
                       </div>
                     </CardContent>
@@ -428,18 +402,6 @@ const ModernHomePage = () => {
               <p className="text-muted-foreground">No new arrivals available</p>
             </div>
           )}
-
-          {/* Circular View All Button */}
-          <div className="flex justify-center mt-8">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate('/products')}
-              className="rounded-full w-16 h-16 p-0 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-            >
-              <ArrowRight className="h-6 w-6" />
-            </Button>
-          </div>
         </div>
       </section>
     </div>

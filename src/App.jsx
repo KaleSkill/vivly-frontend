@@ -8,15 +8,15 @@ import AuthCallback from './pages/auth/pages/AuthCallback'
 import AdminLayout from './pages/admin/layout/AdminLayout'
 import UserLayout from './pages/user/layout/UserLayout'
 import AdminDashboard from './pages/admin/pages/AdminDashboard'
-import BannerManagement from './pages/admin/components/BannerManagement'
+import BannerManagement from './pages/admin/components/banner-management/BannerManagement'
 import ColorManagement from './pages/admin/components/ColorManagement'
 import CategoryManagement from './pages/admin/components/CategoryManagement'
 import UserManagement from './pages/admin/components/UserManagement'
 import ProductManagement from './pages/admin/components/ProductManagement'
-import ProductCreateStepperSimple from './pages/admin/components/ProductCreateStepperSimple'
+import { ProductCreateForm } from './pages/admin/components/product-management'
 import ProductPreview from './pages/admin/components/ProductPreview'
-import ProductEditForm from './pages/admin/components/ProductEditForm'
-import VariantEditForm from './pages/admin/components/VariantEditForm'
+import { ProductEditForm } from './pages/admin/components/product-management'
+import { VariantEditForm, VariantManagement, VariantAddForm } from './pages/admin/components/product-management'
 import SaleManagement from './pages/admin/components/SaleManagement'
 import SaleCreateStepper from './pages/admin/components/SaleCreateStepper'
 import PaymentManagement from './pages/admin/pages/PaymentManagement'
@@ -25,19 +25,21 @@ import { OrderDetailsPage } from './pages/admin/pages/OrderDetailsPage'
 import ShipRocketConfig from './pages/admin/pages/ShipRocketConfig'
 import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
 import ShipRocketDelivery from './pages/admin/pages/ShipRocketDelivery'
-import UserDashboard from './pages/user/pages/UserDashboard'
-import ProductsPage from './pages/user/pages/ProductsPage'
-import ProductDetailPage from './pages/user/pages/ProductDetailPage'
-import CheckoutPage from './pages/user/pages/CheckoutPage'
-import PaymentSuccess from './pages/user/pages/PaymentSuccess'
-import MyCartPage from './pages/user/pages/MyCartPage'
-import MyOrdersPage from './pages/user/pages/MyOrdersPage'
-import UserOrderDetailsPage from './pages/user/pages/OrderDetailsPage'
-import UserSettingsPage from './pages/user/pages/UserSettingsPage'
-import AddressPage from './pages/user/pages/AddressPage'
-import RefundsPage from './pages/user/pages/RefundsPage'
-import ProfilePage from './pages/user/pages/ProfilePage'
-import TrackOrderPage from './pages/user/pages/TrackOrderPage'
+import UserDashboard from './pages/user/pages/account/UserDashboard'
+import ProductsPage from './pages/user/pages/shopping/ProductsPage'
+import ProductDetailPage from './pages/user/pages/shopping/ProductDetailPage'
+import ProductReviewsPage from './pages/user/pages/shopping/ProductReviewsPage'
+import CheckoutPage from './pages/user/pages/orders/CheckoutPage'
+import PaymentSuccess from './pages/user/pages/orders/PaymentSuccess'
+import MyCartPage from './pages/user/pages/orders/MyCartPage'
+import MyOrdersPage from './pages/user/pages/orders/MyOrdersPage'
+import UserOrderDetailsPage from './pages/user/pages/orders/OrderDetailsPage'
+import UserSettingsPage from './pages/user/pages/account/UserSettingsPage'
+import AddressPage from './pages/user/pages/account/AddressPage'
+import RefundsPage from './pages/user/pages/orders/RefundsPage'
+import ProfilePage from './pages/user/pages/account/ProfilePage'
+import TrackOrderPage from './pages/user/pages/orders/TrackOrderPage'
+import CashfreeTest from './pages/test/CashfreeTest'
 
 const App = () => {
   const { checkAuth, isLoading, authUser } = useAuthStore()
@@ -84,9 +86,11 @@ const App = () => {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="products" element={<ProductManagement />} />
-          <Route path="products/create" element={<ProductCreateStepperSimple />} />
+        <Route path="products/create" element={<ProductCreateForm />} />
           <Route path="products/edit/:id" element={<ProductEditForm />} />
-          <Route path="products/:id/variants/edit/:variantId" element={<VariantEditForm />} />
+                <Route path="products/:id/variants" element={<VariantManagement />} />
+                <Route path="products/:id/variants/add" element={<VariantAddForm />} />
+                <Route path="products/:id/variants/edit/:variantId" element={<VariantEditForm />} />
           <Route path="products/preview/:id" element={<ProductPreview />} />
           <Route path="sales" element={<SaleManagement />} />
           <Route path="sales/create" element={<SaleCreateStepper />} />
@@ -108,8 +112,10 @@ const App = () => {
         <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/products/:id/reviews" element={<ProductReviewsPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route path="/test/cashfree" element={<CashfreeTest />} />
         
         {/* User layout routes */}
         <Route path="/user" element={<UserLayout />}>

@@ -60,6 +60,7 @@ const ProductCreateStepperSimple = () => {
     images: []
   })
   const [currentVariantFiles, setCurrentVariantFiles] = useState([])
+  const [imagePreviews, setImagePreviews] = useState([])
 
   // Fetch categories and colors
   useEffect(() => {
@@ -152,6 +153,18 @@ const ProductCreateStepperSimple = () => {
   // Handle file upload for variant
   const handleFileUpload = (files) => {
     setCurrentVariantFiles(files)
+    
+    // Create preview URLs only if files exist
+    if (files && files.length > 0) {
+      const previews = files.map(file => ({
+        name: file.name,
+        url: URL.createObjectURL(file.file),
+        size: file.size
+      }))
+      setImagePreviews(previews)
+    } else {
+      setImagePreviews([])
+    }
   }
 
   // Add variant
@@ -180,12 +193,19 @@ const ProductCreateStepperSimple = () => {
       }]
     }))
 
-    // Reset only images, keep color and sizes for easy addition of another variant with same color/sizes
-    setCurrentVariant(prev => ({
-      ...prev,
-      images: [] // Only reset images, keep color and sizes
-    }))
+    // Clean up object URLs before reset
+    imagePreviews.forEach(preview => {
+      URL.revokeObjectURL(preview.url)
+    })
+    
+    // Reset form for next variant
+    setCurrentVariant({
+      color: '',
+      sizes: [{ size: 'M', stock: 0 }],
+      images: []
+    })
     setCurrentVariantFiles([])
+    setImagePreviews([])
     
     toast.success(`Variant "${currentVariant.color}" added successfully!`)
   }
@@ -200,12 +220,18 @@ const ProductCreateStepperSimple = () => {
 
   // Clear variant form completely
   const clearVariantForm = () => {
+    // Clean up object URLs to prevent memory leaks
+    imagePreviews.forEach(preview => {
+      URL.revokeObjectURL(preview.url)
+    })
+    
     setCurrentVariant({
       color: '',
       sizes: [{ size: 'M', stock: 0 }],
       images: []
     })
     setCurrentVariantFiles([])
+    setImagePreviews([])
   }
 
   // Submit form
@@ -548,6 +574,29 @@ const ProductCreateStepperSimple = () => {
                   <p className="text-sm text-muted-foreground">
                     Upload multiple images for this variant
                   </p>
+                  
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Image Previews:</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview.url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded flex items-center justify-center">
+                              <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                {preview.name}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">

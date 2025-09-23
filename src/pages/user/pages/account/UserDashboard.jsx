@@ -18,12 +18,12 @@ const UserDashboard = () => {
           </div>
           <div className="bg-card p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Profile</h2>
-            <p className="text-muted-foreground">Manage your profile</p>
+            <p className="text-muted-foreground">Manage your account</p>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default UserDashboard;
+export default UserDashboard

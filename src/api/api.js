@@ -82,6 +82,11 @@ export const authApi = {
     // Refresh token
     refreshToken: () => {
         return api.post('/auth/refresh-token');
+    },
+
+    // Get user details
+    getUserDetails: (id) => {
+        return api.get(`/auth/user-details/${id}`);
     }
 };
 
@@ -90,9 +95,16 @@ export const adminApi = {
     // Banner management
     banners: {
         // Get all banners with filter
-        getBanners: (isActive = 'all') => {
-            const params = isActive !== 'all' ? `?isActive=${isActive}` : '';
-            return api.get(`/admin/banners${params}`);
+        getBanners: (isActive = 'all', saleActive = 'all') => {
+            let params = [];
+            if (isActive !== 'all') {
+                params.push(`isActive=${isActive}`);
+            }
+            if (saleActive !== 'all') {
+                params.push(`saleActive=${saleActive}`);
+            }
+            const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+            return api.get(`/admin/banners${queryString}`);
         },
 
         // Upload new banner
@@ -107,6 +119,11 @@ export const adminApi = {
         // Toggle banner status
         toggleBannerStatus: (bannerId) => {
             return api.patch(`/admin/banners/${bannerId}/toggle`);
+        },
+
+        // Toggle banner sale status
+        toggleBannerSaleStatus: (bannerId) => {
+            return api.patch(`/admin/banners/${bannerId}/toggle-sale`);
         },
 
         // Reorder banners
@@ -250,7 +267,8 @@ export const adminApi = {
                 page = 1,
                 limit = 20,
                 isOnSale = 'all',
-                isActive = 'all'
+                isActive = 'all',
+                search = ''
             } = filters;
 
             let params = [];
@@ -264,6 +282,7 @@ export const adminApi = {
             if (limit !== 20) params.push(`limit=${limit}`);
             if (isOnSale !== 'all') params.push(`isOnSale=${isOnSale}`);
             if (isActive !== 'all') params.push(`isActive=${isActive}`);
+            if (search) params.push(`search=${encodeURIComponent(search)}`);
 
             const queryString = params.length > 0 ? `?${params.join('&')}` : '';
             return api.get(`/admin/products${queryString}`);
@@ -285,7 +304,11 @@ export const adminApi = {
 
         // Update product
         updateProduct: (productId, productData) => {
-            return api.patch(`/admin/products/${productId}`, productData);
+            return api.patch(`/admin/products/${productId}`, productData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
         },
 
         // Delete product
@@ -326,6 +349,11 @@ export const adminApi = {
         // Get variant by ID for editing
         getVariantForEdit: (productId, variantId) => {
             return api.get(`/admin/products/${productId}/variants/edit/${variantId}`);
+        },
+
+        // Get product statistics
+        getProductStats: () => {
+            return api.get('/admin/products/stats');
         }
     },
 
@@ -343,20 +371,12 @@ export const adminApi = {
 
         // Create new sale
         createSale: (saleData) => {
-            return api.post('/admin/sales', saleData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            return api.post('/admin/sales', saleData);
         },
 
         // Update sale
         updateSale: (saleId, saleData) => {
-            return api.put(`/admin/sales/${saleId}`, saleData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            return api.put(`/admin/sales/${saleId}`, saleData);
         },
 
         // Delete sale
@@ -419,6 +439,39 @@ export const adminApi = {
         processReturnCancel: (data) => {
             return api.put('/admin/newOrders/items/return-cancel', data);
         }
+    },
+
+    // Statistics management
+    stats: {
+        // Get comprehensive dashboard overview stats
+        getOverviewStats: () => {
+            return api.get('/admin/stats/overview');
+        },
+
+        // Get detailed user statistics
+        getUserStats: () => {
+            return api.get('/admin/stats/users');
+        },
+
+        // Get detailed product statistics
+        getProductStats: () => {
+            return api.get('/admin/stats/products');
+        },
+
+        // Get detailed sales statistics
+        getSalesStats: () => {
+            return api.get('/admin/stats/sales');
+        },
+
+        // Get detailed order statistics
+        getOrderStats: () => {
+            return api.get('/admin/stats/orders');
+        },
+
+        // Get detailed payment statistics
+        getPaymentStats: () => {
+            return api.get('/admin/stats/payments');
+        }
     }
 }
 
@@ -445,7 +498,8 @@ export const userApi = {
                 sort = 'newest',
                 page = 1,
                 limit = 20,
-                isOnSale = 'all'
+                isOnSale = 'all',
+                search = ''
             } = filters;
 
             let params = [];
@@ -458,6 +512,7 @@ export const userApi = {
             if (page !== 1) params.push(`page=${page}`);
             if (limit !== 20) params.push(`limit=${limit}`);
             if (isOnSale !== 'all') params.push(`isOnSale=${isOnSale}`);
+            if (search) params.push(`search=${encodeURIComponent(search)}`);
 
             const queryString = params.length > 0 ? `?${params.join('&')}` : '';
             return api.get(`/products${queryString}`);
@@ -471,6 +526,86 @@ export const userApi = {
         // Get trending products (limit to 8 for homepage)
         getTrendingProducts: () => {
             return api.get('/products?limit=8&sort=newest');
+        }
+    },
+
+    // Category management
+    categories: {
+        // Get all active categories
+        getCategories: () => {
+            return api.get('/categories');
+        },
+
+        // Get category by ID
+        getCategoryById: (categoryId) => {
+            return api.get(`/categories/${categoryId}`);
+        },
+
+        // Get products of a category
+        getProductsOfCategory: (categoryId, filters = {}) => {
+            const {
+                gender = 'all',
+                color = 'all',
+                priceLte = '',
+                priceGte = '',
+                sort = 'newest',
+                page = 1,
+                limit = 20,
+                isOnSale = 'all'
+            } = filters;
+
+            let params = [];
+            if (gender !== 'all') params.push(`gender=${gender}`);
+            if (color !== 'all') params.push(`color=${color}`);
+            if (priceLte) params.push(`priceGte=${priceLte}`);
+            if (priceGte) params.push(`priceGte=${priceGte}`);
+            if (sort !== 'newest') params.push(`sort=${sort}`);
+            if (page !== 1) params.push(`page=${page}`);
+            if (limit !== 20) params.push(`limit=${limit}`);
+            if (isOnSale !== 'all') params.push(`isOnSale=${isOnSale}`);
+
+            const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+            return api.get(`/categories/${categoryId}/products${queryString}`);
+        }
+    },
+
+    // Color management
+    colors: {
+        // Get all active colors
+        getColors: () => {
+            return api.get('/colors');
+        },
+
+        // Get color by ID
+        getColorById: (colorId) => {
+            return api.get(`/colors/${colorId}`);
+        },
+
+        // Get products of a color
+        getProductsOfColor: (colorId, filters = {}) => {
+            const {
+                gender = 'all',
+                category = 'all',
+                priceLte = '',
+                priceGte = '',
+                sort = 'newest',
+                page = 1,
+                limit = 20,
+                isOnSale = 'all'
+            } = filters;
+
+            let params = [];
+            if (gender !== 'all') params.push(`gender=${gender}`);
+            if (category !== 'all') params.push(`category=${category}`);
+            if (priceLte) params.push(`priceGte=${priceLte}`);
+            if (priceGte) params.push(`priceGte=${priceGte}`);
+            if (sort !== 'newest') params.push(`sort=${sort}`);
+            if (page !== 1) params.push(`page=${page}`);
+            if (limit !== 20) params.push(`limit=${limit}`);
+            if (isOnSale !== 'all') params.push(`isOnSale=${isOnSale}`);
+
+            const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+            return api.get(`/colors/${colorId}${queryString}`);
         }
     },
 
@@ -545,6 +680,11 @@ export const userApi = {
         // Create payment order
         createPaymentOrder: (orderData) => {
             return api.post('/payments/create-order', orderData);
+        },
+
+        // Create simple payment (for Cashfree like your example)
+        createSimplePayment: (orderData) => {
+            return api.post('/payments/simple-payment', orderData);
         },
 
         // Verify Razorpay payment
@@ -695,6 +835,43 @@ export const userApi = {
         // Clear token cache
         clearTokenCache: () => {
             return api.post(`/shiprocket/clear-cache`);
+        }
+    },
+
+    // ==================== REVIEWS ====================
+    reviews: {
+        // Add a review
+        addReview: (productId, reviewData) => {
+            console.log('API call - productId:', productId);
+            console.log('API call - reviewData:', reviewData);
+            return api.post(`/reviews/${productId}`, reviewData, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        },
+
+        // Get reviews for a product with pagination
+        getReviews: (productId, params = {}) => {
+            const { page = 1, limit = 10, rating, sort = 'newest' } = params;
+            let queryString = `?page=${page}&limit=${limit}&sort=${sort}`;
+            if (rating) queryString += `&rating=${rating}`;
+            return api.get(`/reviews/${productId}${queryString}`);
+        },
+
+        // Update a review
+        updateReview: (productId, reviewId, reviewData) => {
+            return api.patch(`/reviews/${productId}/${reviewId}`, reviewData);
+        },
+
+        // Delete a review
+        deleteReview: (productId, reviewId) => {
+            return api.delete(`/reviews/${productId}/${reviewId}`);
+        },
+
+        // Mark review as helpful
+        markHelpful: (productId, reviewId) => {
+            return api.post(`/reviews/${productId}/${reviewId}/helpful`);
         }
     }
 };

@@ -33,8 +33,253 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  X,
+  Save
 } from 'lucide-react'
+
+// Edit Sale Modal Component
+const EditSaleModal = ({ sale, products, onClose, onUpdate }) => {
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: sale.name || '',
+    description: sale.description || '',
+    products: sale.products || [],
+    startDate: sale.startDate ? new Date(sale.startDate).toISOString().slice(0, 16) : '',
+    endDate: sale.endDate ? new Date(sale.endDate).toISOString().slice(0, 16) : ''
+  })
+
+  // Handle form input changes
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  // Add product to sale
+  const addProduct = (productId) => {
+    const product = products.find(p => p._id === productId)
+    if (product && !formData.products.find(p => p._id === productId)) {
+      setFormData(prev => ({
+        ...prev,
+        products: [...prev.products, product]
+      }))
+    }
+  }
+
+  // Remove product from sale
+  const removeProduct = (productId) => {
+    setFormData(prev => ({
+      ...prev,
+      products: prev.products.filter(p => p._id !== productId)
+    }))
+  }
+
+  // Submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!formData.name || !formData.startDate || !formData.endDate || formData.products.length === 0) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        products: formData.products.map(p => p._id),
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      }
+
+      const response = await adminApi.sales.updateSale(sale._id, submitData)
+      toast.success('Sale updated successfully!')
+      onUpdate()
+      onClose()
+    } catch (error) {
+      console.error('Error updating sale:', error)
+      toast.error(`Failed to update sale: ${error.response?.data?.message || error.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Edit className="h-5 w-5" />
+            Edit Sale: {sale.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Percent className="h-5 w-5" />
+                Sale Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Sale Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Enter sale name"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Input
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Enter sale description (optional)"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-startDate">Start Date *</Label>
+                  <Input
+                    id="edit-startDate"
+                    type="datetime-local"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-endDate">End Date *</Label>
+                  <Input
+                    id="edit-endDate"
+                    type="datetime-local"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Products Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Select Products
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Available Products Grid */}
+              <div className="space-y-2">
+                <Label>Available Products ({products.length})</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {products.map((product) => {
+                    const isSelected = formData.products.find(p => p._id === product._id);
+                    return (
+                      <div
+                        key={product._id}
+                        className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                            : 'hover:border-primary/50 hover:bg-muted/50'
+                        }`}
+                        onClick={() => isSelected ? removeProduct(product._id) : addProduct(product._id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                            {product.variants?.[0]?.orderImage?.secure_url ? (
+                              <img
+                                src={product.variants[0].orderImage.secure_url}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{product.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {product.variants?.length || 0} variants
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              ₹{typeof product.nonSalePrice === 'object' ? product.nonSalePrice?.price || 'N/A' : product.nonSalePrice || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {isSelected ? (
+                              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                                <CheckCircle className="h-4 w-4" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected Products Summary */}
+              {formData.products.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Selected Products ({formData.products.length})</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.products.map((product) => (
+                      <Badge key={product._id} variant="secondary" className="gap-1">
+                        {product.name}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeProduct(product._id);
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Submit Buttons */}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="gap-2">
+              {loading ? 'Updating...' : 'Update Sale'}
+              <Save className="h-4 w-4" />
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 const SaleManagement = () => {
   const navigate = useNavigate()
@@ -44,6 +289,8 @@ const SaleManagement = () => {
   const [operationLoading, setOperationLoading] = useState({})
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSale, setSelectedSale] = useState(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingSale, setEditingSale] = useState(null)
 
   // Fetch sales and products
   const fetchData = async () => {
@@ -118,6 +365,18 @@ const SaleManagement = () => {
     }
   }
 
+  // Open edit modal
+  const openEditModal = (sale) => {
+    setEditingSale(sale)
+    setEditModalOpen(true)
+  }
+
+  // Close edit modal
+  const closeEditModal = () => {
+    setEditingSale(null)
+    setEditModalOpen(false)
+  }
+
 
   // Format date
   const formatDate = (dateString) => {
@@ -126,6 +385,24 @@ const SaleManagement = () => {
       month: 'short',
       day: 'numeric'
     })
+  }
+
+  // Get duration text
+  const getDurationText = (startDate, endDate) => {
+    const now = new Date()
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    
+    if (now < start) {
+      const daysUntil = Math.ceil((start - now) / (1000 * 60 * 60 * 24))
+      return `Starts in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`
+    } else if (now > end) {
+      const daysAgo = Math.ceil((now - end) / (1000 * 60 * 60 * 24))
+      return `Ended ${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago`
+    } else {
+      const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24))
+      return `${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining`
+    }
   }
 
   // Check if sale is active
@@ -262,12 +539,10 @@ const SaleManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Banner</TableHead>
+                  <TableHead>Product Image</TableHead>
                   <TableHead>Sale Name</TableHead>
-                  <TableHead>Products</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
                   <TableHead className="w-12">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -283,16 +558,16 @@ const SaleManagement = () => {
                       className="hover:bg-muted/50"
                     >
                       <TableCell>
-                        <div className="w-16 h-10 rounded-md overflow-hidden bg-muted">
-                          {sale.banner_image?.secure_url ? (
+                        <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
+                          {sale.products.length > 0 && sale.products[0].variants?.[0]?.orderImage?.secure_url ? (
                             <img
-                              src={sale.banner_image.secure_url}
-                              alt={sale.name}
+                              src={sale.products[0].variants[0].orderImage.secure_url}
+                              alt={sale.products[0].name}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Image className="h-4 w-4 text-muted-foreground" />
+                              <Package className="h-8 w-8 text-muted-foreground" />
                             </div>
                           )}
                         </div>
@@ -300,17 +575,18 @@ const SaleManagement = () => {
                       <TableCell className="font-medium">
                         <div>
                           <div className="font-semibold">{sale.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {sale.products.length} products
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {sale.products.length} products
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
                           <div className="font-medium">
                             {formatDate(sale.startDate)} - {formatDate(sale.endDate)}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {getDurationText(sale.startDate, sale.endDate)}
                           </div>
                         </div>
                       </TableCell>
@@ -325,9 +601,6 @@ const SaleManagement = () => {
                             </Badge>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(sale.createdAt)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -346,7 +619,7 @@ const SaleManagement = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSelectedSale(sale)}>
+                            <DropdownMenuItem onClick={() => openEditModal(sale)}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Sale
                             </DropdownMenuItem>
@@ -406,6 +679,16 @@ const SaleManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Sale Modal */}
+      {editModalOpen && editingSale && (
+        <EditSaleModal
+          sale={editingSale}
+          products={products}
+          onClose={closeEditModal}
+          onUpdate={fetchData}
+        />
+      )}
     </div>
   )
 }

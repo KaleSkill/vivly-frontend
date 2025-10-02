@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { userApi } from '@/api/api'
 import { toast } from 'sonner'
-import NavComp from '@/components/origin/navcomp'
+import NavComp from '@/components/origin/NavComp'
 import Footer from '@/pages/home/components/Footer'
 
 const ProductReviewsPage = () => {

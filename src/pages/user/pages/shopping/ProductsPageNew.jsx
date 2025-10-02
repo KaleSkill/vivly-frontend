@@ -10,7 +10,7 @@ import { userApi } from '@/api/api'
 import { toast } from 'sonner'
 import { ProductCard, ProductSkeleton } from '@/pages/user/components/product'
 import ProductFilterSidebar from '@/pages/user/components/ProductFilterSidebar'
-import NavComp from '@/components/origin/navcomp'
+import NavComp from '@/components/origin/NavComp'
 import Footer from '@/pages/home/components/Footer'
 
 const ProductsPage = () => {

@@ -1,5 +1,5 @@
 import React from 'react'
-import NavComp from '@/components/origin/navcomp'
+import NavComp from '@/components/origin/NavComp'
 
 const UserDashboard = () => {
   return (

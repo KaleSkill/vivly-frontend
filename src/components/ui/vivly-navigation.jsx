@@ -45,9 +45,9 @@ import {
   ShoppingCart, 
   Package, 
   MapPin, 
-  RotateCcw, 
   Search,
-  Sparkles
+  Sparkles,
+  RotateCcw
 } from 'lucide-react'
 import logo from '@/assets/logo.PNG'
 

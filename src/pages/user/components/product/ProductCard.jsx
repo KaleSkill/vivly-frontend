@@ -1,7 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { CartButton } from '@/components/ui/cart-button'
@@ -75,7 +74,7 @@ const ProductCard = ({
         {/* Product Image */}
         <div className="relative  overflow-hidden bg-muted">
           <img
-            src={product.variants?.[0]?.orderImage?.secure_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop"}
+            src={product.variants?.[0]?.orderImage?.secure_url || undefined}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />

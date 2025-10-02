@@ -22,10 +22,8 @@ import SaleCreateStepper from './pages/admin/components/SaleCreateStepper'
 import PaymentManagement from './pages/admin/pages/PaymentManagement'
 import { OrderManagement } from './pages/admin/components/OrderManagement'
 import { OrderDetailsPage } from './pages/admin/pages/OrderDetailsPage'
-import ShipRocketConfig from './pages/admin/pages/ShipRocketConfig'
-import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
-import ShipRocketDelivery from './pages/admin/pages/ShipRocketDelivery'
 import ReturnManagement from './pages/admin/components/refund-management/ReturnManagement'
+import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
 import UserDashboard from './pages/user/pages/account/UserDashboard'
 import ProductsPage from './pages/user/pages/shopping/ProductsPage'
 import ProductDetailPage from './pages/user/pages/shopping/ProductDetailPage'
@@ -102,9 +100,7 @@ const App = () => {
           <Route path="orders/:orderId" element={<OrderDetailsPage />} />
           <Route path="payments" element={<PaymentManagement />} />
           <Route path="refunds" element={<ReturnManagement />} />
-          <Route path="shiprocket-config" element={<ShipRocketConfig />} />
           <Route path="shiprocket" element={<ShipRocketManagement />} />
-          <Route path="shiprocket-delivery" element={<ShipRocketDelivery />} />
           <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
           <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
         </Route>

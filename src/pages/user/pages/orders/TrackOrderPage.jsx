@@ -40,16 +40,8 @@ const TrackOrderPage = () => {
       if (orderResponse.data.success) {
         setOrder(orderResponse.data.data);
         
-        // Then get tracking data if available
-        try {
-          const trackingResponse = await userApi.shiprocket.trackOrder(orderId);
-          if (trackingResponse.data.success) {
-            setTrackingData(trackingResponse.data.data);
-          }
-        } catch (trackingError) {
-          console.log('No tracking data available:', trackingError);
-          setTrackingData(null);
-        }
+        // Tracking data functionality removed
+        setTrackingData(null);
       } else {
         toast.error('Order not found');
         setOrder(null);

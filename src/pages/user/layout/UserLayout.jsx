@@ -16,8 +16,8 @@ import {
   LogOut,
   ChevronDown,
   MapPin,
-  RotateCcw,
-  Truck
+  Truck,
+  RotateCcw
 } from 'lucide-react'
 import {
   DropdownMenu,

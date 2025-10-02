@@ -21,8 +21,8 @@ import {
   Tag,
   ShoppingCart,
   CreditCard,
-  RotateCcw,
   Percent,
+  RotateCcw,
   Truck,
   MapPin
 } from 'lucide-react'
@@ -52,9 +52,7 @@ const AdminLayout = () => {
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, current: location.pathname === '/admin/orders' },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard, current: location.pathname === '/admin/payments' },
     { name: 'Refunds', href: '/admin/refunds', icon: RotateCcw, current: location.pathname === '/admin/refunds' },
-    { name: 'ShipRocket Config', href: '/admin/shiprocket-config', icon: Settings, current: location.pathname === '/admin/shiprocket-config' },
     { name: 'ShipRocket Management', href: '/admin/shiprocket', icon: Truck, current: location.pathname === '/admin/shiprocket' },
-    { name: 'ShipRocket Delivery', href: '/admin/shiprocket-delivery', icon: MapPin, current: location.pathname === '/admin/shiprocket-delivery' },
   ]
 
   const getInitials = (name) => {

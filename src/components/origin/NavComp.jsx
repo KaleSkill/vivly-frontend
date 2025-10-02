@@ -99,7 +99,7 @@ export default function Component() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button className="group size-8" variant="ghost" size="icon">
-                  Vivly
+                  Vibly
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-36 p-1 md:hidden">
@@ -120,7 +120,7 @@ export default function Component() {
           {/* Main nav */}
           <div className="flex items-center gap-6">
             <a href="#" className="text-primary hover:text-primary/90">
-              Vivly
+              Vibly
             </a>
             {/* Navigation menu */}
             <NavigationMenu className="h-full *:h-full max-md:hidden">

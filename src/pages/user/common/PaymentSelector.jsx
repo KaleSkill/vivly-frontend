@@ -140,7 +140,7 @@ export const PaymentSelector = ({ onSelectPayment, selectedPayment, onPlaceOrder
             key: key_id, // Use key_id from response
             amount: paymentOrder.amount,
             currency: paymentOrder.currency,
-            name: "Vivly Store",
+            name: "Vibly Store",
             description: "Payment for your order",
             order_id: providerOrderId,
             handler: async function (response) {

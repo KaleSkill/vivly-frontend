@@ -256,10 +256,10 @@ export const OrderDetailsPage = () => {
                       Color: {product.color?.name} | Size: {product.size}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Quantity: {product.quantity} | Price: ₹{product.amount?.price}
+                      Quantity: {product.quantity} | Price: ₹{parseFloat(product.amount?.price || 0).toFixed(2)}
                     </p>
                     <p className="font-medium">
-                      Total: ₹{product.amount?.totalAmount}
+                      Total: ₹{parseFloat(product.amount?.totalAmount || 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">

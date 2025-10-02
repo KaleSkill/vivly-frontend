@@ -11,7 +11,6 @@ import {
   CheckCircle, 
   Package, 
   ArrowLeft,
-  Download,
   Eye,
   Calendar,
   CreditCard,
@@ -184,10 +183,10 @@ const PaymentSuccess = () => {
                   </div>
                   <div>
                     <h4 className="font-medium mb-2">Order Total</h4>
-                    <div className="text-2xl font-bold">₹{order.totalAmount}</div>
+                    <div className="text-2xl font-bold">₹{parseFloat(order.totalAmount).toFixed(2)}</div>
                     {order.paymentAmount && (
                       <div className="text-sm text-muted-foreground">
-                        Payment: ₹{order.paymentAmount}
+                        Payment: ₹{parseFloat(order.paymentAmount).toFixed(2)}
                       </div>
                     )}
                   </div>
@@ -221,7 +220,7 @@ const PaymentSuccess = () => {
                         </div>
                         <div className="flex items-center gap-4 mt-2">
                           <span className="text-sm">Quantity: {item.quantity}</span>
-                          <span className="font-medium">₹{item.price}</span>
+                          <span className="font-medium">₹{parseFloat(item.amount.price).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -331,15 +330,6 @@ const PaymentSuccess = () => {
               </CardContent>
             </Card>
 
-            {/* Download Receipt */}
-            <Card>
-              <CardContent className="p-4">
-                <Button variant="outline" className="w-full gap-2">
-                  <Download className="h-4 w-4" />
-                  Download Receipt
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

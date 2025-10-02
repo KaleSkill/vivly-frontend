@@ -24,7 +24,6 @@ import { OrderManagement } from './pages/admin/components/OrderManagement'
 import { OrderDetailsPage } from './pages/admin/pages/OrderDetailsPage'
 import ReturnManagement from './pages/admin/components/refund-management/ReturnManagement'
 import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
-import UserDashboard from './pages/user/pages/account/UserDashboard'
 import ProductsPage from './pages/user/pages/shopping/ProductsPage'
 import ProductDetailPage from './pages/user/pages/shopping/ProductDetailPage'
 import ProductReviewsPage from './pages/user/pages/shopping/ProductReviewsPage'
@@ -66,7 +65,7 @@ const App = () => {
       case 'Admin':
         return <Navigate to="/admin" replace />
       case 'User':
-        return <Navigate to="/dashboard" replace />
+        return <Navigate to="/user/profile" replace />
       default:
         return <Navigate to="/" replace />
     }
@@ -106,7 +105,6 @@ const App = () => {
         </Route>
         
         {/* User routes */}
-        <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/products/:id/reviews" element={<ProductReviewsPage />} />

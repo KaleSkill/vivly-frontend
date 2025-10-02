@@ -17,10 +17,10 @@ const Footer = () => {
               <div className="flex items-center gap-3">
                 <img 
                   src={logo} 
-                  alt="Vivly Logo" 
+                  alt="Vibly Logo" 
                   className="w-10 h-10 object-contain"
                 />
-                <span className="text-2xl font-bold text-primary">Vivly</span>
+                <span className="text-2xl font-bold text-primary">Vibly</span>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Your premium destination for fashion and lifestyle. Discover quality products that define your style.
@@ -85,7 +85,7 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Mail className="h-3 w-3" />
-                  <span>support@vivly.com</span>
+                  <span>support@vibly.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />
@@ -102,7 +102,7 @@ const Footer = () => {
         <div className="py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>&copy; 2024 Vivly. All rights reserved.</span>
+              <span>&copy; 2024 Vibly. All rights reserved.</span>
             </div>
             
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

@@ -213,36 +213,62 @@ const ProductFilterSidebar = ({
           </AccordionTrigger>
           <AccordionContent className="px-4 p-4">
             <div className="space-y-4">
+              {/* Input Fields */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="min-price" className="text-sm font-medium">
+                    Min Price
+                  </Label>
+                  <Input
+                    id="min-price"
+                    type="number"
+                    min={minMaxPrice.min}
+                    max={priceRange[1]}
+                    value={priceRange[0]}
+                    onChange={(e) => {
+                      const value = Math.max(minMaxPrice.min, Math.min(priceRange[1], parseInt(e.target.value) || minMaxPrice.min))
+                      setPriceRange([value, priceRange[1]])
+                      onFilterChange('priceGte', value)
+                    }}
+                    className="w-24"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="max-price" className="text-sm font-medium">
+                    Max Price
+                  </Label>
+                  <Input
+                    id="max-price"
+                    type="number"
+                    min={priceRange[0]}
+                    max={minMaxPrice.max}
+                    value={priceRange[1]}
+                    onChange={(e) => {
+                      const value = Math.max(priceRange[0], Math.min(minMaxPrice.max, parseInt(e.target.value) || minMaxPrice.max))
+                      setPriceRange([priceRange[0], value])
+                      onFilterChange('priceLte', value)
+                    }}
+                    className="w-24"
+                  />
+                </div>
+              </div>
+              
+              {/* Slider */}
               <div className="space-y-2">
                 <Slider
                   value={priceRange}
                   onValueChange={handlePriceRangeChange}
                   max={minMaxPrice.max}
                   min={minMaxPrice.min}
-                  step={100}
+                  step={10}
                   className="w-full"
                 />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>₹{priceRange[0]}</span>
-                  <span>₹{priceRange[1]}</span>
-                </div>
               </div>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={priceRange[0]}
-                  onChange={(e) => setPriceRange([parseInt(e.target.value) || minMaxPrice.min, priceRange[1]])}
-                  className="flex-1"
-                />
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || minMaxPrice.max])}
-                  className="flex-1"
-                />
-              </div>
+              
+              {/* Price Range Display */}
+              <p className="text-sm text-muted-foreground">
+                Showing products between ₹{priceRange[0]} and ₹{priceRange[1]}
+              </p>
             </div>
           </AccordionContent>
         </AccordionItem>

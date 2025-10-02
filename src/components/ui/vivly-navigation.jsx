@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDebounce } from '@/hooks/useDebounce'
 import { useAuthStore } from '@/store/authstore'
+import { useCartStore } from '@/store/cartStore'
 import { userApi } from '@/api/api'
-import { motion } from 'framer-motion'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
+import { motion, AnimatePresence } from 'framer-motion'
+import SearchComponent from './SearchComponent'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,33 +29,34 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ModeToggle } from './mode-toggle'
-import { CartIcon } from './cart-button'
+import { CartButton, CartIcon } from './cart-button'
+import { CartSheet } from './cart-sheet-new'
 import { 
   User, 
   Settings, 
   LogOut, 
   Shield, 
   ShoppingCart, 
+  ShoppingBag,
   Package, 
   MapPin, 
-  Search,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  ChevronDown
 } from 'lucide-react'
 import logo from '@/assets/logo.PNG'
 
 
-const VivlyNavigation = () => {
+const ViblyNavigation = () => {
   const { authUser, loginWithGoogle, logout } = useAuthStore()
-  const [searchQuery, setSearchQuery] = useState('')
+  const { totalItems, openCart, fetchCartItems } = useCartStore()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeDropdown, setActiveDropdown] = useState(null)
   const navigate = useNavigate()
   
 
   console.log("authUser",authUser)
-  // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 500)
 
   const handleSignIn = () => {
     loginWithGoogle()
@@ -70,14 +64,6 @@ const VivlyNavigation = () => {
 
   const handleLogout = () => {
     logout()
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-    }
   }
 
   // Fetch categories from API
@@ -94,17 +80,17 @@ const VivlyNavigation = () => {
     }
   }
 
-  // Auto-search when debounced query changes
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(debouncedSearchQuery.trim())}`)
-    }
-  }, [debouncedSearchQuery, navigate])
-
   // Fetch categories on component mount
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  // Fetch cart items when user is authenticated
+  useEffect(() => {
+    if (authUser) {
+      fetchCartItems()
+    }
+  }, [authUser, fetchCartItems])
 
   // Organize categories by gender
   const organizeCategories = () => {
@@ -116,29 +102,25 @@ const VivlyNavigation = () => {
 
     categories.forEach(category => {
       const categoryName = category.name?.toLowerCase() || ''
-      const categorySlug = category.slug || categoryName
+      // Use category name as slug, convert to lowercase and replace spaces with hyphens
+      const categorySlug = categoryName.replace(/\s+/g, '-')
       
       // Determine which main category this belongs to
       if (categoryName.includes('men') || categoryName.includes('male')) {
         organized.men.subcategories.push({
           name: category.name,
-          href: `/products?gender=men&category=${categorySlug}`
+          href: `/products?category=${categorySlug}`
         })
       } else if (categoryName.includes('women') || categoryName.includes('female') || categoryName.includes('dress')) {
         organized.women.subcategories.push({
           name: category.name,
-          href: `/products?gender=women&category=${categorySlug}`
-        })
-      } else if (categoryName.includes('unisex') || categoryName.includes('unisex')) {
-        organized.unisex.subcategories.push({
-          name: category.name,
-          href: `/products?gender=unisex&category=${categorySlug}`
+          href: `/products?category=${categorySlug}`
         })
       } else {
-        // Default to unisex for uncategorized items
+        // Default to unisex for all other items (shirt, tshirt, etc.)
         organized.unisex.subcategories.push({
           name: category.name,
-          href: `/products?gender=unisex&category=${categorySlug}`
+          href: `/products?category=${categorySlug}`
         })
       }
     })
@@ -163,80 +145,106 @@ const VivlyNavigation = () => {
           <div className="flex items-center gap-2">
             <img 
               src={logo} 
-              alt="Vivly Logo" 
+              alt="Vibly Logo" 
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl font-bold text-white">Vivly</span>
+            <span className="text-xl font-bold text-white">Vibly</span>
           </div>
 
-          {/* Main Navigation Menu */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              {/* Home */}
-              <NavigationMenuItem>
-                <NavigationMenuLink 
-                  href="/" 
-                  className="group inline-flex h-9 w-max items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:text-green-400 hover:scale-105 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:text-green-400 data-[state=open]:text-green-400"
-                >
-                  Home
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+          {/* Custom Navigation Menu */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {/* Home */}
+            <a 
+              href="/" 
+              className="text-white hover:text-green-400 transition-all duration-300 hover:scale-105 font-medium"
+            >
+              Home
+            </a>
 
-              {/* Dynamic Categories */}
-              {Object.entries(organizedCategories).map(([key, category]) => {
-                if (category.subcategories.length === 0) return null
-                return (
-                  <NavigationMenuItem key={key}>
-                    <NavigationMenuTrigger className="h-9 text-white hover:text-green-400 hover:scale-105 transition-all duration-300 border-none bg-transparent">
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid gap-3 p-6 w-[400px] bg-background border border-border rounded-lg shadow-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold text-lg text-foreground">{category.title}</span>
+            {/* Dynamic Categories */}
+            {Object.entries(organizedCategories).map(([key, category]) => {
+              if (category.subcategories.length === 0) return null
+              return (
+                <div key={key} className="relative group">
+                  <button
+                    className="flex items-center space-x-1 text-white hover:text-green-400 transition-all duration-300 hover:scale-105 font-medium"
+                    onMouseEnter={() => setActiveDropdown(key)}
+                    onMouseLeave={() => setActiveDropdown(null)}
+                  >
+                    <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  <AnimatePresence>
+                    {activeDropdown === key && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full left-0 mt-2 w-64 bg-background border border-border rounded-lg shadow-xl z-50"
+                        onMouseEnter={() => setActiveDropdown(key)}
+                        onMouseLeave={() => setActiveDropdown(null)}
+                      >
+                        <div className="p-4">
+                          <div className="space-y-2">
+                            {category.subcategories.map((item) => (
+                              <a
+                                key={item.name}
+                                href={item.href}
+                                className="block px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200 text-foreground"
+                              >
+                                <span className="text-sm font-medium">{item.name}</span>
+                              </a>
+                            ))}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {category.subcategories.map((item) => (
-                            <NavigationMenuLink
-                              key={item.name}
-                              href={item.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-green-500/10 hover:text-green-400 focus:bg-green-500/10 focus:text-green-400"
-                            >
-                              <div className="text-sm font-medium leading-none text-foreground">{item.name}</div>
-                            </NavigationMenuLink>
-                          ))}
-                        </div>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                )
-              })}
-
-            
-            </NavigationMenuList>
-          </NavigationMenu>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })}
+          </nav>
         </div>
 
         {/* Center - Search Bar */}
         <div className="hidden md:flex flex-1 max-w-lg mx-6">
-          <form onSubmit={handleSearch} className="w-full">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 w-full h-10 bg-white/10 border-none text-white placeholder-gray-300 focus:bg-white/20 focus:outline-none transition-all duration-300 rounded-lg"
-              />
-            </div>
-          </form>
+          <SearchComponent 
+            placeholder="Search products..."
+            className="w-full"
+          />
         </div>
 
         {/* Right side - User actions */}
         <div className="flex items-center gap-2">
           <ModeToggle />
-          <CartIcon />
+          
+          {/* Cart Icon */}
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none p-2"
+              onClick={openCart}
+            >
+              <ShoppingCart className="h-5 w-5" />
+              <span className="sr-only">Shopping Cart</span>
+            </Button>
+            {totalItems > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600"
+              >
+                {totalItems > 99 ? '99+' : totalItems}
+              </Badge>
+            )}
+          </div>
+          
+        
+          
+          <CartSheet />
           
           {authUser ? (
             <DropdownMenu>
@@ -245,7 +253,7 @@ const VivlyNavigation = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button variant="ghost" className="relative h-10 w-auto rounded-full px-2 gap-2 text-white hover:text-green-600 hover:bg-transparent border-none">
+                  <Button variant="ghost" className="relative h-10 w-auto rounded-full px-2 gap-2 text-white hover:text-green-600 hover:bg-transparent border-none hover:border-none focus:border-none outline-none">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={authUser.data.profile} alt={authUser.data.firstname} />
                       <AvatarFallback className="bg-green-600 text-white text-sm font-medium">
@@ -359,14 +367,14 @@ const VivlyNavigation = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-sm text-white hover:text-green-400 hover:bg-transparent border-none"
+                className="text-sm text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none"
                 onClick={handleSignIn}
               >
                 Sign In
               </Button>
               <Button 
                 size="sm" 
-                className="text-sm bg-green-600 hover:bg-green-700 text-white border-none"
+                className="text-sm bg-green-600 hover:bg-green-700 text-white border-none hover:border-none focus:border-none outline-none"
                 onClick={handleSignIn}
               >
                 Get Started
@@ -375,8 +383,16 @@ const VivlyNavigation = () => {
           )}
         </div>
       </div>
+
+      {/* Mobile Search Bar */}
+      <div className="md:hidden px-4 py-2 border-t border-green-800">
+        <SearchComponent 
+          placeholder="Search products..."
+          className="w-full"
+        />
+      </div>
     </header>
   )
 }
 
-export default VivlyNavigation
+export default ViblyNavigation

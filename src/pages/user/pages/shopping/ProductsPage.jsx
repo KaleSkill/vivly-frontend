@@ -4,7 +4,7 @@ import { userApi } from '@/api/api'
 import { toast } from 'sonner'
 import ProductFilterLayout from '@/pages/user/layout/ProductFilterLayout'
 import ProductMainContent from '@/pages/user/components/ProductMainContent'
-import VivlyNavigation from '@/components/ui/vivly-navigation'
+import ViblyNavigation from '@/components/ui/vivly-navigation'
 import Footer from '@/pages/home/components/Footer'
 import { useDebounce } from '@/hooks/useDebounce'
 
@@ -168,7 +168,7 @@ const ProductsPage = () => {
 
   return (
     <div className="h-screen bg-background flex flex-col">
-      <VivlyNavigation />
+      <ViblyNavigation />
       
       <div className="flex-1">
         <ProductFilterLayout

@@ -543,6 +543,11 @@ export const userApi = {
             return api.get(`/products/${productId}`);
         },
 
+        // Search products
+        searchProducts: (query, limit = 5) => {
+            return api.get(`/products/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+        },
+
         // Get trending products (limit to 8 for homepage)
         getTrendingProducts: () => {
             return api.get('/products?limit=8&sort=newest');

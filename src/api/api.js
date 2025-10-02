@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { tokenManager } from '../utils/tokenManager';
 
-const Backend_url = "http://localhost:3000"
+const Backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 const API_URL = `${Backend_url}/api`
 
 const api = axios.create({
@@ -438,6 +438,26 @@ export const adminApi = {
         // Cancel return request
         processReturnCancel: (data) => {
             return api.put('/admin/newOrders/items/return-cancel', data);
+        },
+
+        // Get all return requests
+        getReturnRequests: (status = 'all', page = 1, limit = 20) => {
+            let params = [];
+            if (status !== 'all') params.push(`status=${status}`);
+            params.push(`page=${page}`);
+            params.push(`limit=${limit}`);
+            const queryString = `?${params.join('&')}`;
+            return api.get(`/admin/newOrders/returns${queryString}`);
+        },
+
+        // Get return request details
+        getReturnRequestDetails: (returnId) => {
+            return api.get(`/admin/newOrders/returns/${returnId}`);
+        },
+
+        // Update return request status
+        updateReturnStatus: (returnId, status, note = '') => {
+            return api.put(`/admin/newOrders/returns/${returnId}/status`, { status, note });
         }
     },
 

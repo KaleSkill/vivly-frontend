@@ -155,8 +155,8 @@ const VivlyNavigation = () => {
   const organizedCategories = organizeCategories()
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b px-4 md:px-6">
-      <div className="flex h-16 items-center justify-between gap-4 bg-[#002F11]">
+    <header className="sticky top-0 z-50 bg-[#002F11] backdrop-blur-sm">
+      <div className="flex h-16 items-center justify-between gap-4 bg-[#002F11] px-4 md:px-6">
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center gap-6">
           {/* Logo */}
@@ -166,7 +166,7 @@ const VivlyNavigation = () => {
               alt="Vivly Logo" 
               className="w-8 h-8 object-contain"
             />
-            <span className="text-xl font-bold text-primary">Vivly</span>
+            <span className="text-xl font-bold text-white">Vivly</span>
           </div>
 
           {/* Main Navigation Menu */}
@@ -176,7 +176,7 @@ const VivlyNavigation = () => {
               <NavigationMenuItem>
                 <NavigationMenuLink 
                   href="/" 
-                  className="group inline-flex h-9 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  className="group inline-flex h-9 w-max items-center justify-center px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:text-green-400 hover:scale-105 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:text-green-400 data-[state=open]:text-green-400"
                 >
                   Home
                 </NavigationMenuLink>
@@ -187,22 +187,22 @@ const VivlyNavigation = () => {
                 if (category.subcategories.length === 0) return null
                 return (
                   <NavigationMenuItem key={key}>
-                    <NavigationMenuTrigger className="h-9">
+                    <NavigationMenuTrigger className="h-9 text-white hover:text-green-400 hover:scale-105 transition-all duration-300 border-none bg-transparent">
                       {key.charAt(0).toUpperCase() + key.slice(1)}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="grid gap-3 p-6 w-[400px]">
+                      <div className="grid gap-3 p-6 w-[400px] bg-background border border-border rounded-lg shadow-lg">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold text-lg">{category.title}</span>
+                          <span className="font-semibold text-lg text-foreground">{category.title}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           {category.subcategories.map((item) => (
                             <NavigationMenuLink
                               key={item.name}
                               href={item.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-green-500/10 hover:text-green-400 focus:bg-green-500/10 focus:text-green-400"
                             >
-                              <div className="text-sm font-medium leading-none">{item.name}</div>
+                              <div className="text-sm font-medium leading-none text-foreground">{item.name}</div>
                             </NavigationMenuLink>
                           ))}
                         </div>
@@ -221,13 +221,13 @@ const VivlyNavigation = () => {
         <div className="hidden md:flex flex-1 max-w-lg mx-6">
           <form onSubmit={handleSearch} className="w-full">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 w-full h-10 bg-background border-border focus:border-primary transition-colors"
+                className="pl-10 pr-4 w-full h-10 bg-white/10 border-none text-white placeholder-gray-300 focus:bg-white/20 focus:outline-none transition-all duration-300 rounded-lg"
               />
             </div>
           </form>
@@ -245,10 +245,10 @@ const VivlyNavigation = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button variant="ghost" className="relative h-10 w-auto rounded-full px-2 gap-2">
+                  <Button variant="ghost" className="relative h-10 w-auto rounded-full px-2 gap-2 text-white hover:text-green-600 hover:bg-transparent border-none">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={authUser.data.profile} alt={authUser.data.firstname} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                      <AvatarFallback className="bg-green-600 text-white text-sm font-medium">
                         {getUserInitials(authUser)}
                       </AvatarFallback>
                     </Avatar>
@@ -267,7 +267,7 @@ const VivlyNavigation = () => {
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={authUser.data.profile} alt={authUser.data.firstname} />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
+                        <AvatarFallback className="bg-green-600 text-white">
                           {getUserInitials(authUser)}
                         </AvatarFallback>
                       </Avatar>
@@ -280,7 +280,7 @@ const VivlyNavigation = () => {
                         </p>
                       </div>
                     </div>
-                    <Badge variant={authUser.data.role === 'Admin' ? 'default' : 'secondary'} className="w-fit">
+                    <Badge variant={authUser.data.role === 'Admin' ? 'default' : 'secondary'} className="w-fit bg-green-100 text-green-800 border-none">
                       {authUser.data.role === 'Admin' ? (
                         <>
                           <Shield className="h-3 w-3 mr-1" />
@@ -359,14 +359,14 @@ const VivlyNavigation = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-sm"
+                className="text-sm text-white hover:text-green-400 hover:bg-transparent border-none"
                 onClick={handleSignIn}
               >
                 Sign In
               </Button>
               <Button 
                 size="sm" 
-                className="text-sm"
+                className="text-sm bg-green-600 hover:bg-green-700 text-white border-none"
                 onClick={handleSignIn}
               >
                 Get Started

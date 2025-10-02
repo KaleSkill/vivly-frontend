@@ -10,6 +10,8 @@ const HomePage = () => {
       
       {/* Modern Homepage with Dark/Light Mode Support */}
       <ModernHomePage />
+
+    
       
       {/* Footer */}
       <Footer />

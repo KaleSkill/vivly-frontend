@@ -25,6 +25,7 @@ import { OrderDetailsPage } from './pages/admin/pages/OrderDetailsPage'
 import ShipRocketConfig from './pages/admin/pages/ShipRocketConfig'
 import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
 import ShipRocketDelivery from './pages/admin/pages/ShipRocketDelivery'
+import ReturnManagement from './pages/admin/components/refund-management/ReturnManagement'
 import UserDashboard from './pages/user/pages/account/UserDashboard'
 import ProductsPage from './pages/user/pages/shopping/ProductsPage'
 import ProductDetailPage from './pages/user/pages/shopping/ProductDetailPage'
@@ -100,7 +101,7 @@ const App = () => {
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailsPage />} />
           <Route path="payments" element={<PaymentManagement />} />
-          <Route path="refunds" element={<div className="p-6"><h1 className="text-2xl font-bold">Refunds Management</h1></div>} />
+          <Route path="refunds" element={<ReturnManagement />} />
           <Route path="shiprocket-config" element={<ShipRocketConfig />} />
           <Route path="shiprocket" element={<ShipRocketManagement />} />
           <Route path="shiprocket-delivery" element={<ShipRocketDelivery />} />

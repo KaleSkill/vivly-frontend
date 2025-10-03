@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Star, MessageSquare, ThumbsUp, MoreHorizontal } from 'lucide-react'
+import { Star, ThumbsUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { userApi } from '@/api/api'
 import { toast } from 'sonner'
 
-const ProductReviews = ({ productId, showLimited = true }) => {
-  const navigate = useNavigate()
+const ProductReviewsSection = ({ productId }) => {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [reviewStats, setReviewStats] = useState({
@@ -17,27 +15,24 @@ const ProductReviews = ({ productId, showLimited = true }) => {
     totalReviews: 0,
     ratingDistribution: []
   })
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [helpfulStates, setHelpfulStates] = useState({})
+  const reviewsPerPage = 5
 
   useEffect(() => {
     fetchReviews()
-  }, [productId])
+  }, [productId, currentPage])
 
   const fetchReviews = async () => {
     try {
       setLoading(true)
       const response = await userApi.reviews.getReviews(productId, { 
-        page: 1, 
-        limit: showLimited ? 3 : 10 
+        page: currentPage, 
+        limit: reviewsPerPage 
       })
       
       console.log('Reviews API response:', response.data)
-      console.log('Reviews data structure:', {
-        reviews: response.data.data.reviews,
-        averageRating: response.data.data.averageRating,
-        totalReviews: response.data.data.totalReviews,
-        ratingDistribution: response.data.data.ratingDistribution
-      })
       
       setReviews(response.data.data.reviews)
       setReviewStats({
@@ -45,6 +40,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
         totalReviews: response.data.data.totalReviews,
         ratingDistribution: response.data.data.ratingDistribution
       })
+      setTotalPages(response.data.data.pagination.totalPages)
     } catch (error) {
       console.error('Error fetching reviews:', error)
       toast.error('Failed to fetch reviews')
@@ -88,7 +84,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
     return name || 'Anonymous User'
   }
 
-  const renderStars = (rating, size = 'sm') => {
+  const renderStars = (rating) => {
     return (
       <div className="flex items-center">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -119,7 +115,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
         [reviewId]: response.data.isHelpful
       }))
       
-      // Update the specific review in the reviews array instead of refetching
+      // Update the specific review in the reviews array
       setReviews(prevReviews => 
         prevReviews.map(review => 
           review._id === reviewId 
@@ -133,14 +129,15 @@ const ProductReviews = ({ productId, showLimited = true }) => {
     }
   }
 
-  const handleViewAllReviews = () => {
-    navigate(`/products/${productId}/reviews`)
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (loading) {
     return (
       <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3, 4, 5].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -161,7 +158,6 @@ const ProductReviews = ({ productId, showLimited = true }) => {
   if (reviews.length === 0) {
     return (
       <div className="text-center py-8">
-        <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">No reviews yet</h3>
         <p className="text-muted-foreground">Be the first to review this product!</p>
       </div>
@@ -169,29 +165,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Review Stats */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            {renderStars(Math.round(reviewStats.averageRating))}
-            <span className="ml-2 text-sm text-muted-foreground">
-              {reviewStats.averageRating} ({reviewStats.totalReviews} reviews)
-            </span>
-          </div>
-        </div>
-        {showLimited && reviewStats.totalReviews > 3 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewAllReviews}
-            className="text-primary"
-          >
-            View All Reviews
-          </Button>
-        )}
-      </div>
-
+    <div className="space-y-6">
       {/* Reviews List */}
       <div className="space-y-4">
         {reviews.map((review) => (
@@ -213,7 +187,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
                     <div>
                       <h4 className="font-semibold text-sm">{getUserName(review.user)}</h4>
                       <div className="flex items-center gap-2">
-                        {renderStars(review.rating, 'sm')}
+                        {renderStars(review.rating)}
                         <span className="text-xs text-muted-foreground">
                           {formatDate(review.createdAt)}
                         </span>
@@ -232,7 +206,7 @@ const ProductReviews = ({ productId, showLimited = true }) => {
                       size="sm"
                       className={`h-8 px-2 ${
                         helpfulStates[review._id] 
-                          ? 'text-yellow-500 hover:text-yellow-600' 
+                          ? 'text-primary hover:text-primary/80' 
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                       onClick={(e) => handleMarkHelpful(review._id, e)}
@@ -250,20 +224,52 @@ const ProductReviews = ({ productId, showLimited = true }) => {
         ))}
       </div>
 
-      {/* View More Button for Limited View */}
-      {showLimited && reviewStats.totalReviews > 3 && (
-        <div className="text-center pt-4">
-          <Button
-            variant="outline"
-            onClick={handleViewAllReviews}
-            className="w-full"
-          >
-            View All {reviewStats.totalReviews} Reviews
-          </Button>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+         
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="gap-2"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-export default ProductReviews
+export default ProductReviewsSection

@@ -9,7 +9,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { adminApi, authApi } from '@/api/api';
 import { toast } from 'sonner';
-import { Search, Eye, Filter, RefreshCw, Package, CreditCard, Truck, MoreHorizontal, Settings } from 'lucide-react';
+import { 
+  Search, 
+  Eye, 
+  Filter, 
+  RefreshCw, 
+  Package, 
+  CreditCard, 
+  Truck, 
+  MoreHorizontal, 
+  Settings,
+  ShoppingCart,
+  Clock,
+  Users,
+  Download
+} from 'lucide-react';
 import { StatusUpdateModal } from './StatusUpdateModal';
 
 export const OrderManagement = () => {
@@ -152,13 +166,17 @@ export const OrderManagement = () => {
     setShowStatusModal(true);
   };
 
+  const formatPrice = (amount) => {
+    return parseFloat(amount || 0).toFixed(2);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Simple Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Order Management</h1>
-          <p className="text-muted-foreground">Manage all customer orders and their status</p>
+          <h1 className="text-2xl font-bold">Order Management</h1>
+          <p className="text-muted-foreground">Manage customer orders</p>
         </div>
         <Button onClick={fetchOrders} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -166,65 +184,93 @@ export const OrderManagement = () => {
         </Button>
       </div>
 
-      {/* Status Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {Object.entries(statusSummary).map(([status, count]) => (
-          <Card key={status} className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{status}</p>
-                  <p className="text-2xl font-bold">{count}</p>
-                </div>
-                <Truck className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      {/* Filters */}
+      {/* Order Status Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Order Status Overview
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <Input
-                placeholder="Search by order ID or customer name..."
-                value={filters.search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full"
-              />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {Object.entries(statusSummary).map(([status, count]) => (
+              <Card key={status}>
+                <CardContent className="p-4 text-center">
+                  <div className="space-y-2">
+                    <div className="mx-auto w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                      <Truck className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">{status}</p>
+                      <p className="text-xl font-bold">{count}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Simple Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Search Orders</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Order ID, customer name..."
+                  value={filters.search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-            <Select value={filters.status || "all"} onValueChange={(value) => handleStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Order Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Ordered">Ordered</SelectItem>
-                <SelectItem value="Shipped">Shipped</SelectItem>
-                <SelectItem value="Delivered">Delivered</SelectItem>
-                <SelectItem value="Cancelled">Cancelled</SelectItem>
-                <SelectItem value="Return Requested">Return Requested</SelectItem>
-                <SelectItem value="Returned">Returned</SelectItem>
-                <SelectItem value="Refunded">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.paymentStatus || "all"} onValueChange={(value) => handlePaymentStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Payment Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Payments</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="PAID">Paid</SelectItem>
-                <SelectItem value="FAILED">Failed</SelectItem>
-                <SelectItem value="REFUNDED">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Order Status</label>
+              <Select value={filters.status || "all"} onValueChange={(value) => handleStatusFilter(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Ordered">Ordered</SelectItem>
+                  <SelectItem value="Shipped">Shipped</SelectItem>
+                  <SelectItem value="Delivered">Delivered</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectItem value="Return Requested">Return Requested</SelectItem>
+                  <SelectItem value="Returned">Returned</SelectItem>
+                  <SelectItem value="Refunded">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Payment Status</label>
+              <Select value={filters.paymentStatus || "all"} onValueChange={(value) => handlePaymentStatusFilter(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Payments" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Payments</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="FAILED">Failed</SelectItem>
+                  <SelectItem value="REFUNDED">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -232,7 +278,10 @@ export const OrderManagement = () => {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Orders ({orders.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5" />
+            Orders ({orders.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -251,7 +300,7 @@ export const OrderManagement = () => {
                     <TableHead>Payment</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ordered At</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -322,14 +371,14 @@ export const OrderManagement = () => {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleViewOrder(order)}>
                               <Eye className="h-4 w-4 mr-2" />
-                              View Order Details
+                              View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateStatus(order)}>
                               <Settings className="h-4 w-4 mr-2" />
-                              Manage Status
+                              Update Status
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -341,30 +390,28 @@ export const OrderManagement = () => {
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Simple Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground px-4">
                 Page {page} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={page === totalPages}
+              >
+                Next
+              </Button>
             </div>
           )}
         </CardContent>

@@ -23,7 +23,7 @@ import PaymentManagement from './pages/admin/pages/PaymentManagement'
 import { OrderManagement } from './pages/admin/components/OrderManagement'
 import { OrderDetailsPage } from './pages/admin/pages/OrderDetailsPage'
 import ReturnManagement from './pages/admin/components/refund-management/ReturnManagement'
-import ShipRocketManagement from './pages/admin/pages/ShipRocketManagement'
+import RefundManagement from './pages/admin/components/RefundManagement'
 import ProductsPage from './pages/user/pages/shopping/ProductsPage'
 import ProductDetailPage from './pages/user/pages/shopping/ProductDetailPage'
 import ProductReviewsPage from './pages/user/pages/shopping/ProductReviewsPage'
@@ -38,6 +38,11 @@ import RefundsPage from './pages/user/pages/orders/RefundsPage'
 import ProfilePage from './pages/user/pages/account/ProfilePage'
 import TrackOrderPage from './pages/user/pages/orders/TrackOrderPage'
 import CashfreeTest from './pages/test/CashfreeTest'
+import TermsAndConditions from './pages/home/policy/TermsAndConditions'
+import PrivacyPolicy from './pages/home/policy/PrivacyPolicy'
+import RefundCancellation from './pages/home/policy/RefundCancellation'
+import ShippingPolicy from './pages/home/policy/ShippingPolicy'
+import SizeGuide from './pages/home/SizeGuide'
 
 const App = () => {
   const { checkAuth, isLoading, authUser } = useAuthStore()
@@ -79,6 +84,13 @@ const App = () => {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/login/success" element={<AuthCallback />} />
         
+        {/* Policy pages */}
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund" element={<RefundCancellation />} />
+        <Route path="/shipping" element={<ShippingPolicy />} />
+        <Route path="/sizes" element={<SizeGuide />} />
+        
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -98,8 +110,7 @@ const App = () => {
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailsPage />} />
           <Route path="payments" element={<PaymentManagement />} />
-          <Route path="refunds" element={<ReturnManagement />} />
-          <Route path="shiprocket" element={<ShipRocketManagement />} />
+          <Route path="refunds" element={<RefundManagement />} />
           <Route path="analytics" element={<div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1></div>} />
           <Route path="settings" element={<div className="p-6"><h1 className="text-2xl font-bold">Settings</h1></div>} />
         </Route>

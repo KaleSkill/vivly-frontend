@@ -56,8 +56,8 @@ const Footer = () => {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="/contact" className="hover:text-foreground transition-colors">Contact Us</a></li>
                 <li><a href="/shipping" className="hover:text-foreground transition-colors">Shipping Info</a></li>
-                <li><a href="/returns" className="hover:text-foreground transition-colors">Returns & Exchanges</a></li>
-                <li><a href="/size-guide" className="hover:text-foreground transition-colors">Size Guide</a></li>
+                <li><a href="/refund" className="hover:text-foreground transition-colors">Returns & Exchanges</a></li>
+                <li><a href="/sizes" className="hover:text-foreground transition-colors">Size Guide</a></li>
                 <li><a href="/faq" className="hover:text-foreground transition-colors">FAQ</a></li>
               </ul>
             </div>
@@ -106,9 +106,10 @@ const Footer = () => {
             </div>
             
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
-              <a href="/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <a href="/cookies" className="hover:text-foreground transition-colors">Cookie Policy</a>
+              <a href="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms-and-conditions" className="hover:text-foreground transition-colors">Terms & Conditions</a>
+              <a href="/refund" className="hover:text-foreground transition-colors">Refund</a>
+              <a href="/shipping" className="hover:text-foreground transition-colors">Shipping Policy</a>
             </div>
 
             <div className="flex items-center gap-1 text-sm text-muted-foreground">

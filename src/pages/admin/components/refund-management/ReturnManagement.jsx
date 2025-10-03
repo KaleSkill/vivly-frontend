@@ -33,10 +33,10 @@ const ReturnManagement = () => {
               <p>• Manage return orders</p>
               <p>• Track refund status</p>
               <p>• Handle customer returns</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
     </div>
   )
 }

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
   ArrowRight,  
-  Heart, 
   Star,
   Sparkles
 } from 'lucide-react'
@@ -190,19 +189,6 @@ const ModernHomePage = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute top-2 right-2 flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="rounded-full w-10 h-10 p-0 bg-background/80 backdrop-blur"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Handle wishlist
-                          }}
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                      </div>
                     </div>
                     <CardContent className="p-3 md:p-4">
                       <h3 className="font-semibold mb-2 line-clamp-2 text-sm md:text-base">{product.name}</h3>
@@ -325,19 +311,6 @@ const ModernHomePage = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute top-2 right-2 flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="rounded-full w-10 h-10 p-0 bg-background/80 backdrop-blur"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            // Handle wishlist
-                          }}
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                      </div>
                     </div>
                     <CardContent className="p-3 md:p-4">
                       <h3 className="font-semibold mb-2 line-clamp-2 text-sm md:text-base">{product.name}</h3>

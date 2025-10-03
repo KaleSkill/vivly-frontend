@@ -13,9 +13,11 @@ import {
   Plus, 
   Minus, 
   Trash2, 
-  ArrowLeft,
   CreditCard,
-  Package
+  Package,
+  ShoppingBag,
+  Hash,
+  ArrowRight
 } from 'lucide-react'
 
 const MyCartPage = () => {
@@ -155,15 +157,25 @@ const MyCartPage = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-muted animate-pulse rounded" />
-          ))}
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-8 w-48 bg-muted animate-pulse rounded mb-2" />
+                <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+              </div>
+              <div className="h-6 w-16 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+                ))}
+              </div>
+              <div className="h-64 bg-muted animate-pulse rounded-lg" />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -171,183 +183,262 @@ const MyCartPage = () => {
 
   if (cartData.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="text-8xl mb-6">🛒</div>
-        <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
-        <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-          Looks like you haven't added any items to your cart yet. Start shopping to add some products!
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button onClick={handleContinueShopping} className="gap-2">
-            <Package className="h-4 w-4" />
-            Continue Shopping
-          </Button>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Shopping Cart</h1>
+              <p className="text-sm text-muted-foreground">Your cart is empty</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-32 h-32 bg-muted rounded-full flex items-center justify-center mb-6">
+              <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
+            <p className="text-muted-foreground mb-8 max-w-md text-center">
+              Looks like you haven't added any items to your cart yet. Start shopping to add some products!
+            </p>
+            <Button onClick={handleContinueShopping} className="gap-2" size="lg">
+              <Package className="h-4 w-4" />
+              Continue Shopping
+            </Button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/products')}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Products
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <ShoppingCart className="h-6 w-6" />
-            Shopping Cart
-          </h1>
-          <p className="text-muted-foreground">
-            {totalCartItems} {totalCartItems === 1 ? 'item' : 'items'} in your cart
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+              <ShoppingCart className="h-6 w-6" />
+              Shopping Cart
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {totalCartItems} {totalCartItems === 1 ? 'item' : 'items'} in your cart
+            </p>
+          </div>
+          <Badge variant="secondary" className="hidden sm:flex">
+            <Hash className="h-3 w-3 mr-1" />
+            {totalCartItems} items
+          </Badge>
         </div>
-      </div>
 
-      {/* Cart Items */}
-      <div className="space-y-4">
-        {cartData.map((item) => (
-          <Card key={`${item.productId}-${item.selectedVariant.colorId}`} className="overflow-hidden">
-            <CardContent className="p-0">
-              {/* Mobile Layout - Horizontal Card */}
-              <div className="flex gap-4 p-4">
-                {/* Product Image */}
-                <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={item.image?.secure_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop"}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Product Details */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Top Row: Name and Remove Button */}
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-sm line-clamp-2 leading-tight">{item.name}</h3>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span className="px-2 py-1 bg-muted rounded-full">
-                          {item.selectedVariant.colorName}
-                        </span>
-                        <span>•</span>
-                        <span>Size {item.selectedVariant.size}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Cart Items */}
+          <div className="lg:col-span-2 space-y-4">
+            {cartData.map((item) => (
+              <Card key={`${item.productId}-${item.selectedVariant.colorId}`} className="border-border/50 hover:border-border transition-colors duration-200">
+                <CardContent className="p-4">
+                  {/* Mobile Layout */}
+                  <div className="md:hidden space-y-4">
+                    <div className="flex gap-3">
+                      <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={item.image?.secure_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop"}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveItem(item.productId, item.selectedVariant.colorId)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Bottom Row: Quantity, Price, Actions */}
-                  <div className="flex items-center justify-between">
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm line-clamp-2">{item.name}</h3>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                          <span className="px-2 py-1 bg-muted rounded-full">
+                            {item.selectedVariant.colorName}
+                          </span>
+                          <span>•</span>
+                          <span>Size {item.selectedVariant.size}</span>
+                        </div>
+                      </div>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity - 1)}
-                        disabled={item.selectedVariant.quantity <= 1 || loading}
-                        className="h-7 w-7 p-0"
+                        onClick={() => handleRemoveItem(item.productId, item.selectedVariant.colorId)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-6 text-center font-medium text-sm">{item.selectedVariant.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity + 1)}
-                        disabled={loading}
-                        className="h-7 w-7 p-0"
-                      >
-                        <Plus className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                     
-                    {/* Price and Actions */}
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="font-medium text-sm">
-                          ₹{parseFloat(item.discountedPrice || item.price || 0).toLocaleString()}
+                    <div className="space-y-3 pt-3 border-t border-border/50">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Quantity</span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity - 1)}
+                            disabled={item.selectedVariant.quantity <= 1 || loading}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center font-medium text-sm">{item.selectedVariant.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity + 1)}
+                            disabled={loading}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
-                        {item.price && item.discountedPrice && item.discountedPrice < item.price && (
-                          <div className="text-xs text-muted-foreground line-through">
-                            ₹{parseFloat(item.price).toLocaleString()}
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Total</span>
+                        <div className="text-right">
+                          <div className="font-semibold text-sm">
+                            ₹{parseFloat(item.discountedPrice || item.price || 0).toFixed(2)}
                           </div>
-                        )}
+                          {item.price && item.discountedPrice && item.discountedPrice < item.price && (
+                            <div className="text-xs text-muted-foreground line-through">
+                              ₹{parseFloat(item.price).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
-      {/* Order Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Order Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Subtotal ({totalCartItems} items)</span>
-              <span>₹{totalAmount.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Shipping</span>
-              <span className="text-green-600">Free</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Tax</span>
-              <span>₹0</span>
-            </div>
+                  {/* Desktop Layout */}
+                  <div className="hidden md:flex gap-4">
+                    <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.image?.secure_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=100&h=100&fit=crop"}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-base line-clamp-2">{item.name}</h3>
+                          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                            <span className="px-2 py-1 bg-muted rounded-full">
+                              {item.selectedVariant.colorName}
+                            </span>
+                            <span>•</span>
+                            <span>Size {item.selectedVariant.size}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveItem(item.productId, item.selectedVariant.colorId)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-muted-foreground">Quantity:</span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity - 1)}
+                              disabled={item.selectedVariant.quantity <= 1 || loading}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{item.selectedVariant.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(item.productId, item.selectedVariant.colorId, item.selectedVariant.quantity + 1)}
+                              disabled={loading}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="font-semibold text-base">
+                            ₹{parseFloat(item.discountedPrice || item.price || 0).toFixed(2)}
+                          </div>
+                          {item.price && item.discountedPrice && item.discountedPrice < item.price && (
+                            <div className="text-sm text-muted-foreground line-through">
+                              ₹{parseFloat(item.price).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-          
-          <Separator />
-          
-          <div className="flex justify-between font-semibold text-lg">
-            <span>Total</span>
-            <span>₹{totalAmount.toLocaleString()}</span>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <Card className="border-border/50 sticky top-6">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5" />
+                  Order Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal ({totalCartItems} items)</span>
+                    <span>₹{totalAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Shipping</span>
+                    <span className="text-green-600 font-medium">Free</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Tax</span>
+                    <span>₹0.00</span>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span className="text-primary">₹{totalAmount.toFixed(2)}</span>
+                </div>
+                
+                <div className="space-y-3 pt-4">
+                  <Button 
+                    onClick={handleCheckout} 
+                    className="w-full gap-2"
+                    size="lg"
+                  >
+                    Proceed to Checkout
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleContinueShopping}
+                    className="w-full gap-2"
+                  >
+                    <Package className="h-4 w-4" />
+                    Continue Shopping
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          
-          <div className="space-y-3 pt-4">
-            <Button 
-              onClick={handleCheckout} 
-              className="w-full gap-2"
-              size="lg"
-            >
-              <CreditCard className="h-4 w-4" />
-              Proceed to Checkout
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleContinueShopping}
-              className="w-full gap-2"
-            >
-              <Package className="h-4 w-4" />
-              Continue Shopping
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

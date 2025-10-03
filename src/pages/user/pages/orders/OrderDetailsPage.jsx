@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import { 
-  ArrowLeft,
   Package,
   Calendar,
   CreditCard,
@@ -17,14 +16,32 @@ import {
   XCircle,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  Hash,
+  Receipt,
+  User,
+  Building,
+  ShoppingBag,
+  X,
+  RotateCcw,
+  AlertCircle
 } from 'lucide-react'
+import RefundRequestForm from '@/components/ui/RefundRequestForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams()
   const navigate = useNavigate()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [cancelLoading, setCancelLoading] = useState(null)
 
   useEffect(() => {
     fetchOrderDetails()
@@ -43,6 +60,63 @@ const OrderDetailsPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Helper functions
+  const canCancelItem = (item) => {
+    return item.orderStatus === 'Ordered' && !item.cancelledAt
+  }
+
+  const canRefundItem = (item) => {
+    return item.orderStatus === 'Cancelled' && 
+           order.paymentMethod === 'ONLINE' && 
+           !item.refundRequestedAt && 
+           !item.refundAmount
+  }
+
+  const hasRefundRequest = (item) => {
+    return item.refundRequestedAt
+  }
+
+  const getRefundStatus = (item) => {
+    if (item.refundStatus === 'REFUNDED') return 'refunded'
+    if (item.refundStatus === 'REJECTED') return 'rejected'
+    if (item.refundRequestedAt) return 'pending'
+    return null
+  }
+
+  const handleCancelItem = async (itemId, quantity) => {
+    try {
+      setCancelLoading(itemId)
+      const response = await userApi.newOrders.cancelOrderItem(itemId, quantity)
+      if (response.data.success) {
+        toast.success('Item cancelled successfully')
+        fetchOrderDetails() // Refresh order details
+      } else {
+        toast.error(response.data.message || 'Failed to cancel item')
+      }
+    } catch (error) {
+      console.error('Cancel error:', error)
+      toast.error(error.response?.data?.message || 'Failed to cancel item')
+    } finally {
+      setCancelLoading(null)
+    }
+  }
+
+  const handleRefundRequest = (item) => {
+    setSelectedItem(item)
+    setRefundDialogOpen(true)
+  }
+
+  const handleRefundSuccess = () => {
+    setRefundDialogOpen(false)
+    setSelectedItem(null)
+    fetchOrderDetails() // Refresh order details
+  }
+
+  const handleRefundCancel = () => {
+    setRefundDialogOpen(false)
+    setSelectedItem(null)
   }
 
   const getStatusIcon = (status) => {
@@ -98,6 +172,10 @@ const OrderDetailsPage = () => {
     })
   }
 
+  const formatPrice = (price) => {
+    return parseFloat(price).toFixed(2)
+  }
+
   const getImageUrl = (imageData) => {
     if (!imageData) return '/placeholder-product.jpg'
     if (typeof imageData === 'string') return imageData
@@ -109,11 +187,7 @@ const OrderDetailsPage = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/user/orders')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Orders
-          </Button>
+        <div>
           <h1 className="text-3xl font-bold">Order Details</h1>
         </div>
         <div className="space-y-4">
@@ -135,11 +209,7 @@ const OrderDetailsPage = () => {
   if (!order) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/user/orders')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Orders
-          </Button>
+        <div>
           <h1 className="text-3xl font-bold">Order Details</h1>
         </div>
         
@@ -161,242 +231,500 @@ const OrderDetailsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/user/orders')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Orders
-        </Button>
-        <h1 className="text-3xl font-bold">Order Details</h1>
-        <Badge className={`ml-auto ${getStatusBadgeColor(order.overallStatus)}`}>
-          {getStatusIcon(order.overallStatus)}
-          <span className="ml-1">{order.overallStatus}</span>
-        </Badge>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Order Details</h1>
+            <p className="text-sm text-muted-foreground">Track your order status</p>
+          </div>
+          <Badge className={`${getStatusBadgeColor(order.overallStatus)} hidden sm:flex`}>
+            {getStatusIcon(order.overallStatus)}
+            <span className="ml-1">{order.overallStatus}</span>
+          </Badge>
+        </div>
 
-      {/* Order Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Order #{order.orderId}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium mb-2">Order Information</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Ordered on {formatDate(order.orderedAt)}
+        {/* Order Status Banner - Mobile */}
+        <div className="sm:hidden mb-6">
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    {getStatusIcon(order.overallStatus)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm">Order Status</div>
+                    <div className="text-xs text-muted-foreground">#{order.orderId}</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Payment: {order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}
+                <Badge className={getStatusBadgeColor(order.overallStatus)}>
+                  {order.overallStatus}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Order Summary */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Hash className="h-5 w-5" />
+                  Order #{order.orderId}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Mobile Layout */}
+                <div className="md:hidden space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Order Date</div>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{formatDate(order.orderedAt)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Total Items</div>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-border/50">
+                    <div className="text-sm text-muted-foreground mb-1">Total Amount</div>
+                    <div className="text-2xl font-bold text-primary">₹{formatPrice(order.totalAmount)}</div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-2">Order Information</div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{formatDate(order.orderedAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-2">Payment Method</div>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-2">Total Amount</div>
+                    <div className="text-2xl font-bold text-primary">₹{formatPrice(order.totalAmount)}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Order Items */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <ShoppingBag className="h-5 w-5" />
+                  Order Items
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {order.items && order.items.map((item, index) => (
+                    <div key={index} className="border border-border/50 rounded-lg p-4 hover:border-border transition-colors duration-200">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-3">
+                        <div className="flex gap-3">
+                          <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                            <img
+                              src={getImageUrl(item.product?.image)}
+                              alt={item.product?.name || 'Product'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-product.jpg';
+                              }}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm line-clamp-2">{item.product?.name || 'Product'}</h4>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Color: {item.color?.name || 'N/A'} • Size: {item.size || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Quantity</span>
+                            <span className="text-sm font-medium">{item.quantity}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm">Unit Price</span>
+                            <span className="text-sm">₹{formatPrice(item.amount?.price || item.price)}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Total</span>
+                            <span className="text-lg font-bold text-primary">₹{formatPrice(item.amount?.totalAmount || (item.price * item.quantity))}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Item Actions - Mobile */}
+                        <div className="mt-3 pt-2 border-t border-border/50">
+                          <div className="flex gap-2 flex-wrap">
+                            {/* Cancel Button */}
+                            {canCancelItem(item) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelItem(item._id, item.quantity)}
+                                disabled={cancelLoading === item._id}
+                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 text-xs"
+                              >
+                                {cancelLoading === item._id ? (
+                                  <>
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Cancelling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="h-3 w-3 mr-1" />
+                                    Cancel Item
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {/* Refund Request Button */}
+                            {canRefundItem(item) && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleRefundRequest(item)}
+                                className="bg-blue-600 hover:bg-blue-700 text-xs"
+                              >
+                                <RotateCcw className="h-3 w-3 mr-1" />
+                                Request Refund
+                              </Button>
+                            )}
+                            
+                            {/* Refund Status */}
+                            {getRefundStatus(item) === 'pending' && (
+                              <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">
+                                <AlertCircle className="h-3 w-3" />
+                                <span>Refund Requested - Under Review</span>
+                              </div>
+                            )}
+                            {getRefundStatus(item) === 'refunded' && (
+                              <div className="flex items-center gap-2 px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Refund Processed</span>
+                              </div>
+                            )}
+                            {getRefundStatus(item) === 'rejected' && (
+                              <div className="flex items-center gap-2 px-2 py-1 bg-red-50 text-red-700 rounded-md text-xs">
+                                <XCircle className="h-3 w-3" />
+                                <span>Refund Rejected</span>
+                              </div>
+                            )}
+                            
+                            {/* Cancelled Status */}
+                            {item.orderStatus === 'Cancelled' && !canRefundItem(item) && !getRefundStatus(item) && (
+                              <div className="flex items-center gap-2 px-2 py-1 bg-red-50 text-red-700 rounded-md text-xs">
+                                <XCircle className="h-3 w-3" />
+                                <span>Cancelled</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex gap-4">
+                        <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                          <img
+                            src={getImageUrl(item.product?.image)}
+                            alt={item.product?.name || 'Product'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = '/placeholder-product.jpg';
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-lg mb-2">{item.product?.name || 'Product'}</h4>
+                          <div className="text-sm text-muted-foreground mb-3">
+                            Color: {item.color?.name || 'N/A'} • Size: {item.size || 'N/A'}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                              <div>
+                                <span className="text-sm text-muted-foreground">Quantity</span>
+                                <div className="font-medium">{item.quantity}</div>
+                              </div>
+                              <div>
+                                <span className="text-sm text-muted-foreground">Unit Price</span>
+                                <div className="font-medium">₹{formatPrice(item.amount?.price || item.price)}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm text-muted-foreground">Total</span>
+                              <div className="text-xl font-bold text-primary">₹{formatPrice(item.amount?.totalAmount || (item.price * item.quantity))}</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Item Actions */}
+                        <div className="mt-4 pt-3 border-t border-border/50">
+                          <div className="flex gap-2 flex-wrap">
+                            {/* Cancel Button */}
+                            {canCancelItem(item) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelItem(item._id, item.quantity)}
+                                disabled={cancelLoading === item._id}
+                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700"
+                              >
+                                {cancelLoading === item._id ? (
+                                  <>
+                                    <Clock className="h-4 w-4 mr-1" />
+                                    Cancelling...
+                                  </>
+                                ) : (
+                                  <>
+                                    <X className="h-4 w-4 mr-1" />
+                                    Cancel Item
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {/* Refund Request Button */}
+                            {canRefundItem(item) && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleRefundRequest(item)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                Request Refund
+                              </Button>
+                            )}
+                            
+                            {/* Refund Status */}
+                            {getRefundStatus(item) === 'pending' && (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm">
+                                <AlertCircle className="h-4 w-4" />
+                                <span>Refund Requested - Under Review</span>
+                              </div>
+                            )}
+                            {getRefundStatus(item) === 'refunded' && (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 rounded-md text-sm">
+                                <CheckCircle className="h-4 w-4" />
+                                <span>Refund Processed</span>
+                              </div>
+                            )}
+                            {getRefundStatus(item) === 'rejected' && (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-md text-sm">
+                                <XCircle className="h-4 w-4" />
+                                <span>Refund Rejected</span>
+                              </div>
+                            )}
+                            
+                            {/* Cancelled Status */}
+                            {item.orderStatus === 'Cancelled' && !canRefundItem(item) && !getRefundStatus(item) && (
+                              <div className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-700 rounded-md text-sm">
+                                <XCircle className="h-4 w-4" />
+                                <span>Cancelled</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Shipping Address */}
+            {order.shippingAddress && (
+              <Card className="border-border/50">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <MapPin className="h-5 w-5" />
+                    Shipping Address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div>
+                        <div className="font-medium text-sm">{order.shippingAddress.fullName}</div>
+                        {order.shippingAddress.phone && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                            <Phone className="h-3 w-3" />
+                            {order.shippingAddress.phone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Building className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="text-sm text-muted-foreground">
+                        <div>{order.shippingAddress.addressLine1}</div>
+                        {order.shippingAddress.addressLine2 && (
+                          <div>{order.shippingAddress.addressLine2}</div>
+                        )}
+                        <div>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}</div>
+                        <div>{order.shippingAddress.country}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Payment Information */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CreditCard className="h-5 w-5" />
+                  Payment Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Payment Method</div>
+                    <div className="font-medium">{order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}</div>
+                  </div>
+                  
+                  {order.paymentProvider && (
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Payment Provider</div>
+                      <div className="font-medium capitalize">{order.paymentProvider}</div>
+                    </div>
+                  )}
+                  
                   {order.transactionId && (
-                    <span className="text-xs bg-muted px-2 py-1 rounded">
-                      Txn: {order.transactionId}
-                    </span>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Transaction ID</div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                          {order.transactionId}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Payment Status</div>
+                    <Badge className={getPaymentStatusBadgeColor(order.paymentStatus)}>
+                      {order.paymentStatus}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Order Timeline */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Clock className="h-5 w-5" />
+                  Order Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">Order Placed</div>
+                      <div className="text-xs text-muted-foreground">{formatDate(order.orderedAt)}</div>
+                    </div>
+                  </div>
+                  
+                  {order.overallStatus === 'PROCESSING' && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                        <Clock className="h-4 w-4 text-yellow-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">Processing</div>
+                        <div className="text-xs text-muted-foreground">Your order is being prepared</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.overallStatus === 'SHIPPED' && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Truck className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">Shipped</div>
+                        <div className="text-xs text-muted-foreground">Your order is on the way</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {order.overallStatus === 'DELIVERED' && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">Delivered</div>
+                        <div className="text-xs text-muted-foreground">Your order has been delivered</div>
+                      </div>
+                    </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  {order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Order Total</h4>
-              <div className="text-2xl font-bold">₹{order.totalAmount}</div>
-              {order.paymentAmount && (
-                <div className="text-sm text-muted-foreground">
-                  Payment: ₹{order.paymentAmount}
-                </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Shipping Address */}
-      {order.shippingAddress && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Shipping Address
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="font-medium">{order.shippingAddress.fullName}</div>
-              <div className="text-muted-foreground">
-                {order.shippingAddress.addressLine1}
-                {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
-              </div>
-              <div className="text-muted-foreground">
-                {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}
-              </div>
-              <div className="text-muted-foreground">
-                {order.shippingAddress.country}
-              </div>
-              {order.shippingAddress.phone && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  {order.shippingAddress.phone}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payment Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Payment Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Payment Method:</span>
-              <span className="text-sm">
-                {order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod}
-              </span>
-            </div>
-            {order.paymentProvider && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Payment Provider:</span>
-                <span className="text-sm capitalize">{order.paymentProvider}</span>
-              </div>
-            )}
-            {order.transactionId && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Transaction ID:</span>
-                <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                  {order.transactionId}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Payment Status:</span>
-              <Badge className={getPaymentStatusBadgeColor(order.paymentStatus)}>
-                {order.paymentStatus}
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Order Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {order.items && order.items.map((item, index) => (
-              <div key={index} className="flex gap-4 p-4 border rounded-lg">
-                <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    src={getImageUrl(item.product?.image)}
-                    alt={item.product?.name || 'Product'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = '/placeholder-product.jpg';
-                    }}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-lg">{item.product?.name || 'Product'}</h4>
-                  <div className="text-sm text-muted-foreground mb-2">
-                    Color: {item.color?.name || 'N/A'} • Size: {item.size || 'N/A'}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-medium">Qty: {item.quantity}</span>
-                      <span className="text-sm text-muted-foreground">
-                        ₹{item.amount?.price || item.price} each
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-lg">
-                        ₹{(item.amount?.totalAmount || (item.price * item.quantity)).toFixed(2)}
-                      </div>
-                      {item.amount?.shippingCharges > 0 && (
-                        <div className="text-xs text-muted-foreground">
-                          + ₹{item.amount.shippingCharges} shipping
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Order Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <div className="font-medium">Order Placed</div>
-                <div className="text-sm text-muted-foreground">{formatDate(order.orderedAt)}</div>
-              </div>
-            </div>
-            
-            {order.overallStatus === 'PROCESSING' && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-yellow-600" />
-                </div>
-                <div>
-                  <div className="font-medium">Processing</div>
-                  <div className="text-sm text-muted-foreground">Your order is being prepared</div>
-                </div>
-              </div>
-            )}
-            
-            {order.overallStatus === 'SHIPPED' && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Truck className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <div className="font-medium">Shipped</div>
-                  <div className="text-sm text-muted-foreground">Your order is on the way</div>
-                </div>
-              </div>
-            )}
-            
-            {order.overallStatus === 'DELIVERED' && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <div className="font-medium">Delivered</div>
-                  <div className="text-sm text-muted-foreground">Your order has been delivered</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Refund Request Dialog */}
+      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Refund</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <RefundRequestForm
+              orderId={orderId}
+              itemId={selectedItem._id}
+              item={selectedItem}
+              onSuccess={handleRefundSuccess}
+              onCancel={handleRefundCancel}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

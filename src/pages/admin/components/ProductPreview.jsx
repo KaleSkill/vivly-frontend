@@ -17,7 +17,6 @@ import {
   ArrowLeft,
   Edit,
   Share2,
-  Heart,
   ShoppingCart,
   Star,
   Truck,
@@ -354,9 +353,6 @@ const ProductPreview = () => {
                 <Button size="lg" className="flex-1 gap-2">
                   <ShoppingCart className="h-4 w-4" />
                   Add to Cart
-                </Button>
-                <Button variant="outline" size="lg">
-                  <Heart className="h-4 w-4" />
                 </Button>
               </div>
 

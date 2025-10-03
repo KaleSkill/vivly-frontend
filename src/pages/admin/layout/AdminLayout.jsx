@@ -22,9 +22,7 @@ import {
   ShoppingCart,
   CreditCard,
   Percent,
-  RotateCcw,
-  Truck,
-  MapPin
+  RotateCcw
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -52,7 +50,6 @@ const AdminLayout = () => {
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart, current: location.pathname === '/admin/orders' },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard, current: location.pathname === '/admin/payments' },
     { name: 'Refunds', href: '/admin/refunds', icon: RotateCcw, current: location.pathname === '/admin/refunds' },
-    { name: 'ShipRocket Management', href: '/admin/shiprocket', icon: Truck, current: location.pathname === '/admin/shiprocket' },
   ]
 
   const getInitials = (name) => {

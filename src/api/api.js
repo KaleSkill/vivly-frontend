@@ -458,6 +458,21 @@ export const adminApi = {
         // Update return request status
         updateReturnStatus: (returnId, status, note = '') => {
             return api.put(`/admin/newOrders/returns/${returnId}/status`, { status, note });
+        },
+
+        // Get all refund requests
+        getAllRefundRequests: () => {
+            return api.get('/admin/newOrders/refunds');
+        },
+
+        // Approve refund request
+        approveRefund: (refundRequestId, refundAmount) => {
+            return api.put(`/admin/newOrders/refunds/${refundRequestId}/approve`, { refundAmount });
+        },
+
+        // Reject refund request
+        rejectRefund: (refundRequestId, rejectionReason) => {
+            return api.put(`/admin/newOrders/refunds/${refundRequestId}/reject`, { rejectionReason });
         }
     },
 
@@ -489,6 +504,16 @@ export const adminApi = {
         },
 
         // Get detailed payment statistics
+        getPaymentStats: () => {
+            return api.get('/admin/stats/payments');
+        }
+    },
+
+    // ==================== ANALYTICS ====================
+    analytics: {
+        getStats: () => {
+            return api.get('/admin/stats');
+        },
         getPaymentStats: () => {
             return api.get('/admin/stats/payments');
         }
@@ -664,6 +689,16 @@ export const userApi = {
         // Cancel return request
         cancelReturnRequest: (itemId, quantity) => {
             return api.put('/newOrders/return-cancel', { itemId, quantity });
+        },
+
+        // Request refund
+        requestRefund: (refundData) => {
+            return api.post('/newOrders/refund/request', refundData);
+        },
+
+        // Get user refund requests
+        getRefundRequests: () => {
+            return api.get('/newOrders/refund/requests');
         }
     },
 

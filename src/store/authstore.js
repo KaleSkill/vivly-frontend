@@ -41,11 +41,12 @@ export const useAuthStore = create(
               isLoading: false
             });
             
-            // Redirect based on user role
+            // Redirect based on user role using current domain
+            const currentDomain = window.location.origin;
             if (user.role === 'Admin') {
-              window.location.href = '/admin';
+              window.location.href = `${currentDomain}/admin`;
             } else {
-              window.location.href = '/user/profile';
+              window.location.href = `${currentDomain}/user/profile`;
             }
             
             return user;

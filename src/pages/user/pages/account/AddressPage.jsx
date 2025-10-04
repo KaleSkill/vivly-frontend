@@ -138,7 +138,6 @@ const AddressPage = () => {
       isDefault: false
     })
     setEditingAddress(null)
-    setCityFromPincode('')
   }
 
   const handleSubmit = async (e) => {
@@ -242,7 +241,13 @@ const AddressPage = () => {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="gap-2 rounded-full">
+            <Button 
+              onClick={() => {
+                resetForm();
+                setIsDialogOpen(true);
+              }} 
+              className="gap-2 rounded-full"
+            >
               <Plus className="h-4 w-4" />
               Add Address
             </Button>

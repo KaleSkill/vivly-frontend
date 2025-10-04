@@ -38,6 +38,7 @@ const CheckoutPage = () => {
   const [orderNotes, setOrderNotes] = useState('');
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState(null);
+  const [shippingCharges, setShippingCharges] = useState(0);
   const [newAddress, setNewAddress] = useState({
     phone: '',
     address: '',
@@ -54,6 +55,28 @@ const CheckoutPage = () => {
     fetchCartItemsFromStore();
     initializeCashfreeSDK();
   }, []);
+
+  // Calculate shipping charges based on payment method and order amount
+  useEffect(() => {
+    calculateShippingCharges();
+  }, [paymentMethod, totalPrice]);
+
+  const calculateShippingCharges = () => {
+    if (paymentMethod === 'cod') {
+      // COD: Always charge ₹50 shipping
+      setShippingCharges(50);
+    } else if (paymentMethod === 'razorpay' || paymentMethod === 'cashfree') {
+      // Online payment: Free shipping above ₹599, ₹50 below ₹599
+      if (totalPrice >= 599) {
+        setShippingCharges(0);
+      } else {
+        setShippingCharges(50);
+      }
+    } else {
+      // Default: No shipping charges
+      setShippingCharges(0);
+    }
+  };
 
   const initializeCashfreeSDK = async () => {
     try {
@@ -221,7 +244,9 @@ const CheckoutPage = () => {
       },
       paymentMethod: 'COD',
       paymentProvider: null,
-      transactionId: null
+      transactionId: null,
+      shippingCharges: shippingCharges,
+      totalAmount: totalPrice + shippingCharges
     };
 
     console.log('COD Order data being sent:', JSON.stringify(orderData, null, 2));
@@ -251,7 +276,7 @@ const CheckoutPage = () => {
         // For Razorpay, use the existing payment order creation
         const paymentData = {
           orderId: tempOrderId,
-          amount: totalPrice * 100, // Convert to paise/cents
+          amount: (totalPrice + shippingCharges) * 100, // Convert to paise/cents
           provider: 'razorpay',
           customerName: selectedAddressObj.phone,
           customerEmail: 'customer@example.com',
@@ -270,7 +295,7 @@ const CheckoutPage = () => {
         // For Cashfree, use the simple payment approach
         const paymentResponse = await userApi.payments.createSimplePayment({
           orderId: tempOrderId,
-          amount: totalPrice * 100 // Convert to paise
+          amount: (totalPrice + shippingCharges) * 100 // Convert to paise
         });
 
         if (!paymentResponse.data.success) {
@@ -464,7 +489,9 @@ const CheckoutPage = () => {
         },
         paymentMethod: 'ONLINE',
         paymentProvider: paymentMethod,
-        transactionId: transactionId
+        transactionId: transactionId,
+        shippingCharges: shippingCharges,
+        totalAmount: totalPrice + shippingCharges
       };
 
       console.log('Order data being sent:', JSON.stringify(orderData, null, 2));
@@ -843,21 +870,19 @@ const CheckoutPage = () => {
                 {/* Order Totals */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Subtotal</span>
+                    <span>Subtotal:</span>
                     <span>₹{totalPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Shipping</span>
-                    <span className="text-green-600">Free</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Tax</span>
-                    <span>₹0</span>
+                    <span>Shipping:</span>
+                    <span className={shippingCharges === 0 ? "text-green-600" : ""}>
+                      {shippingCharges === 0 ? "Free" : `₹${shippingCharges}`}
+                    </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>₹{totalPrice.toLocaleString()}</span>
+                    <span>Total:</span>
+                    <span>₹{(totalPrice + shippingCharges).toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>

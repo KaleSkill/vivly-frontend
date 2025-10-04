@@ -42,9 +42,10 @@ import {
   MapPin, 
   Sparkles,
   RotateCcw,
-  ChevronDown
+  ChevronDown,
+  Search
 } from 'lucide-react'
-import logo from '@/assets/logo.PNG'
+import logo from '@/assets/logo.PNG' // edit this
 
 
 const ViblyNavigation = () => {
@@ -53,6 +54,7 @@ const ViblyNavigation = () => {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeDropdown, setActiveDropdown] = useState(null)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const navigate = useNavigate()
   
 
@@ -142,13 +144,12 @@ const ViblyNavigation = () => {
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center gap-6">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
             <img 
               src={logo} 
               alt="Vibly Logo" 
-              className="w-8 h-8 object-contain"
+              className="w-12 h-12 object-contain"
             />
-            <span className="text-xl font-bold text-white">Vibly</span>
           </div>
 
           {/* Custom Navigation Menu */}
@@ -220,6 +221,17 @@ const ViblyNavigation = () => {
         {/* Right side - User actions */}
         <div className="flex items-center gap-2">
           <ModeToggle />
+          
+          {/* Mobile Search Icon */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="md:hidden text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none p-2"
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+          >
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Search Products</span>
+          </Button>
           
           {/* Cart Icon */}
           <div className="relative">
@@ -385,12 +397,14 @@ const ViblyNavigation = () => {
       </div>
 
       {/* Mobile Search Bar */}
-      <div className="md:hidden px-4 py-2 border-t border-green-800">
-        <SearchComponent 
-          placeholder="Search products..."
-          className="w-full"
-        />
-      </div>
+      {isMobileSearchOpen && (
+        <div className="md:hidden px-4 py-2 border-t border-green-800">
+          <SearchComponent 
+            placeholder="Search products..."
+            className="w-full"
+          />
+        </div>
+      )}
     </header>
   )
 }

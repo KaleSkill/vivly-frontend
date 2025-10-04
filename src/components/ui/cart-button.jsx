@@ -43,7 +43,7 @@ const CartButton = ({ product, colorId, size, quantity = 1, variant = "default",
       <Button 
         onClick={handleGoToCart}
         variant="outline"
-        className={`w-full ${className}`}
+        className={`w-full rounded-full ${className}`}
         disabled={isAdding}
       >
         <ArrowRight className="w-4 h-4 mr-2" />
@@ -56,7 +56,7 @@ const CartButton = ({ product, colorId, size, quantity = 1, variant = "default",
     <Button 
       onClick={handleAddToCart}
       variant={variant}
-      className={`w-full ${className}`}
+      className={`w-full rounded-full ${className}`}
       disabled={isAdding || !colorId || !size}
     >
       <ShoppingBag className="w-4 h-4 mr-2" />

@@ -155,7 +155,7 @@ const CartSheet = ({ children, autoOpen = false }) => {
                 <span className="font-bold text-lg">{formatPrice(totalPrice)}</span>
               </div>
               <Button 
-                className="w-full bg-black text-white hover:bg-gray-800 transition-colors" 
+                className="w-full bg-black text-white hover:bg-gray-800 transition-colors rounded-full" 
                 size="lg" 
                 onClick={handleCheckout}
               >

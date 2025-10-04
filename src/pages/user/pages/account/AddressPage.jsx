@@ -12,8 +12,7 @@ import {
   MapPin, 
   Plus, 
   Edit3, 
-  Trash2,
-  ArrowLeft
+  Trash2
 } from 'lucide-react'
 
 const AddressPage = () => {
@@ -148,12 +147,9 @@ const AddressPage = () => {
   if (loading && addresses.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/user/profile')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Profile
-          </Button>
-          <h1 className="text-3xl font-bold">My Addresses</h1>
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-2">My Addresses</h1>
+          <p className="text-lg text-muted-foreground">Manage your shipping addresses</p>
         </div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
@@ -175,21 +171,15 @@ const AddressPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/user/profile')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Profile
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">My Addresses</h1>
-            <p className="text-muted-foreground">Manage your shipping addresses</p>
-          </div>
+      <div className="text-center space-y-4">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">My Addresses</h1>
+          <p className="text-lg text-muted-foreground">Manage your shipping addresses</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="gap-2">
+            <Button onClick={resetForm} className="gap-2 rounded-full">
               <Plus className="h-4 w-4" />
               Add Address
             </Button>
@@ -299,10 +289,10 @@ const AddressPage = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={loading} className="gap-2">
+                <Button type="submit" disabled={loading} className="gap-2 rounded-full">
                   {loading ? 'Saving...' : (editingAddress ? 'Update Address' : 'Add Address')}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-full">
                   Cancel
                 </Button>
               </div>
@@ -313,14 +303,16 @@ const AddressPage = () => {
 
       {/* Addresses List */}
       {addresses.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-16 border-dashed">
           <CardContent>
-            <MapPin className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-2xl font-semibold mb-2">No addresses yet</h2>
-            <p className="text-muted-foreground mb-6">
-              Add your first address to make checkout easier
+            <div className="w-20 h-20 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+              <MapPin className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-3">No addresses yet</h2>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              Add your first address to make checkout easier and faster
             </p>
-            <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+            <Button onClick={() => setIsDialogOpen(true)} className="gap-2 rounded-full px-8">
               <Plus className="h-4 w-4" />
               Add Your First Address
             </Button>
@@ -346,7 +338,7 @@ const AddressPage = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(address)}
-                      className="h-8 w-8 p-0"
+                      className="h-8 w-8 p-0 rounded-full"
                     >
                       <Edit3 className="h-4 w-4" />
                     </Button>
@@ -354,7 +346,7 @@ const AddressPage = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(address._id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

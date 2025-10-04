@@ -426,7 +426,7 @@ const ProductDetailPage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-green-900 dark:text-green-100">Free Shipping</p>
-                    <p className="text-xs text-green-700 dark:text-green-300">On orders over ₹999</p>
+                    <p className="text-xs text-green-700 dark:text-green-300">On orders over ₹599</p>
                   </div>
                 </div>
                 
@@ -435,7 +435,7 @@ const ProductDetailPage = () => {
                     <RotateCcw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-blue-900 dark:text-blue-100">30-Day Return</p>
+                    <p className="font-medium text-blue-900 dark:text-blue-100">7 Day Exchange Return</p>
                     <p className="text-xs text-blue-700 dark:text-blue-300">Easy exchange policy</p>
                   </div>
                 </div>

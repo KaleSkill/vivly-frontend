@@ -845,5 +845,13 @@ export const userApi = {
         markHelpful: (productId, reviewId) => {
             return api.post(`/reviews/${productId}/${reviewId}/helpful`);
         }
+    },
+
+    // ==================== ADDRESS SERVICES ====================
+    address: {
+        // Get address details by pincode
+        getPincodeDetails: (pincode) => {
+            return api.get(`/address/pincode/${pincode}`);
+        }
     }
 };

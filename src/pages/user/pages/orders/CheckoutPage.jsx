@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { 
   CreditCard, 
@@ -19,10 +20,12 @@ import {
   Plus,
   CheckCircle,
   Truck,
-  Shield
+  Shield,
+  Search
 } from 'lucide-react';
 import { userApi } from '@/api/api';
 import { useCartStore } from '@/store/cartStore';
+import statesData from '@/data/indian-states.json';
 
 // Cashfree SDK - we'll load it dynamically
 let cashfree = null;
@@ -39,6 +42,9 @@ const CheckoutPage = () => {
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [shippingCharges, setShippingCharges] = useState(0);
+  const [states, setStates] = useState(statesData.states);
+  const [districts, setDistricts] = useState([]);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
   const [newAddress, setNewAddress] = useState({
     phone: '',
     address: '',
@@ -112,6 +118,45 @@ const CheckoutPage = () => {
     }
   };
 
+  const fetchDistricts = (stateCode) => {
+    const state = states.find(s => s.code === stateCode);
+    if (state) {
+      setDistricts(state.districts);
+    }
+  };
+
+  const handlePincodeLookup = async (pincode) => {
+    if (!pincode || pincode.length !== 6) return
+    
+    setPincodeLoading(true);
+    try {
+      const response = await userApi.address.getPincodeDetails(pincode);
+      if (response.data.success) {
+        const data = response.data.data;
+        setNewAddress(prev => ({
+          ...prev,
+          city: data.city || '', // Use city from API response
+          state: data.state,
+          country: 'India'
+        }));
+        
+        
+        // Find state code and fetch districts
+        const state = states.find(s => s.name === data.state);
+        if (state) {
+          fetchDistricts(state.code);
+        }
+        
+        toast.success('Address details filled automatically!');
+      }
+    } catch (error) {
+      console.error('Error fetching pincode details:', error);
+      toast.error('Unable to fetch address details for this pincode');
+    } finally {
+      setPincodeLoading(false);
+    }
+  };
+
   const isPaymentMethodEnabled = (method) => {
     if (!paymentConfig) return true; // Default to enabled if config not loaded
     
@@ -149,6 +194,30 @@ const CheckoutPage = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Auto-fill address details when pincode is entered
+    if (name === 'postalCode' && value.length === 6) {
+      handlePincodeLookup(value);
+    }
+  };
+
+  const handleAddressSelectChange = (name, value) => {
+    setNewAddress(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Fetch districts when state changes
+    if (name === 'state') {
+      const state = states.find(s => s.name === value);
+      if (state) {
+        fetchDistricts(state.code);
+        setNewAddress(prev => ({
+          ...prev,
+          city: '' // Reset city when state changes
+        }));
+      }
+    }
   };
 
   const handleAddAddress = async (e) => {
@@ -569,22 +638,25 @@ const CheckoutPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Step 1: Address Selection */}
             {currentStep === 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Shipping Address
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <MapPin className="h-6 w-6" />
+                    <h2 className="text-xl font-semibold">Shipping Address</h2>
+                  </div>
+                </div>
+
+                {/* Address Content */}
+                <div className="bg-muted/30 rounded-lg p-4">
                   {addresses.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <div className="text-center py-6">
+                      <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
                       <h3 className="font-medium mb-2">No addresses found</h3>
-                      <p className="text-muted-foreground mb-4">Add a shipping address to continue</p>
+                      <p className="text-muted-foreground text-sm mb-4">Add a shipping address to continue</p>
                       <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button className="gap-2">
+                          <Button className="gap-2 rounded-full">
                             <Plus className="h-4 w-4" />
                             Add Address
                           </Button>
@@ -617,51 +689,69 @@ const CheckoutPage = () => {
                                 />
                               </div>
                               <div className="space-y-2">
+                                <Label htmlFor="postalCode">Postal Code *</Label>
+                                <div className="relative">
+                                  <Input
+                                    id="postalCode"
+                                    name="postalCode"
+                                    value={newAddress.postalCode}
+                                    onChange={handleAddressInputChange}
+                                    placeholder="Enter 6-digit pincode"
+                                    maxLength={6}
+                                    required
+                                  />
+                                  {pincodeLoading && (
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                      <Search className="h-4 w-4 animate-spin text-muted-foreground" />
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Enter pincode to auto-fill city and state
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="state">State *</Label>
+                                <Select value={newAddress.state} onValueChange={(value) => handleAddressSelectChange('state', value)}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select state" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {states.map((state) => (
+                                      <SelectItem key={state.code} value={state.name}>
+                                        {state.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
                                 <Label htmlFor="city">City *</Label>
                                 <Input
                                   id="city"
                                   name="city"
                                   value={newAddress.city}
                                   onChange={handleAddressInputChange}
+                                  placeholder="Enter city name"
                                   required
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label htmlFor="state">State *</Label>
-                                <Input
-                                  id="state"
-                                  name="state"
-                                  value={newAddress.state}
-                                  onChange={handleAddressInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="postalCode">Postal Code *</Label>
-                                <Input
-                                  id="postalCode"
-                                  name="postalCode"
-                                  value={newAddress.postalCode}
-                                  onChange={handleAddressInputChange}
-                                  required
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="country">Country *</Label>
+                                <Label htmlFor="country">Country</Label>
                                 <Input
                                   id="country"
                                   name="country"
-                                  value={newAddress.country}
-                                  onChange={handleAddressInputChange}
-                                  required
+                                  value="India"
+                                  disabled
+                                  className="bg-muted"
                                 />
                               </div>
                             </div>
                             <div className="flex gap-3 pt-4">
-                              <Button type="submit" disabled={loading}>
+                              <Button type="submit" disabled={loading} className="rounded-full">
                                 {loading ? 'Adding...' : 'Add Address'}
                               </Button>
-                              <Button type="button" variant="outline" onClick={() => setIsAddressDialogOpen(false)}>
+                              <Button type="button" variant="outline" onClick={() => setIsAddressDialogOpen(false)} className="rounded-full">
                                 Cancel
                               </Button>
                             </div>
@@ -670,52 +760,70 @@ const CheckoutPage = () => {
                       </Dialog>
                     </div>
                   ) : (
-                    <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress}>
-                      {addresses.map((address) => (
-                        <div key={address._id} className="flex items-start space-x-3 p-4 border rounded-lg">
-                          <RadioGroupItem value={address._id} id={address._id} />
-                          <Label htmlFor={address._id} className="flex-1 cursor-pointer">
-                            <div className="space-y-1">
-                              <div className="font-medium flex items-center gap-2">
-                                {address.isDefault && <Badge variant="secondary" className="text-xs">Default</Badge>}
+                    <div className="space-y-3">
+                      <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress}>
+                        {addresses.map((address) => (
+                          <div key={address._id} className="flex items-start space-x-3 p-3 border rounded-lg">
+                            <RadioGroupItem value={address._id} id={address._id} className="mt-1" />
+                            <Label htmlFor={address._id} className="flex-1 cursor-pointer">
+                              <div className="space-y-1">
+                                <div className="font-medium flex items-center gap-2">
+                                  {address.isDefault && <Badge variant="outline" className="text-xs">Default</Badge>}
+                                </div>
+                                <div className="text-sm text-muted-foreground">{address.phone}</div>
+                                <div className="text-sm text-muted-foreground">{address.address}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {address.city}, {address.state} {address.postalCode}
+                                </div>
+                                <div className="text-sm text-muted-foreground">{address.country}</div>
                               </div>
-                              <div className="text-sm text-muted-foreground">{address.phone}</div>
-                              <div className="text-sm text-muted-foreground">{address.address}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {address.city}, {address.state} {address.postalCode}
-                              </div>
-                              <div className="text-sm text-muted-foreground">{address.country}</div>
-                            </div>
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
                   )}
-                  
-                  <div className="flex justify-end">
-                    <Button onClick={() => setCurrentStep(2)} disabled={!selectedAddress}>
-                      Continue to Payment
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/user/cart')}
+                    className="flex-1 rounded-full"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Back to Cart
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrentStep(2)} 
+                    disabled={!selectedAddress}
+                    className="flex-1 rounded-full"
+                  >
+                    Continue to Payment
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Step 2: Payment Method */}
             {currentStep === 2 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Payment Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <CreditCard className="h-6 w-6" />
+                    <h2 className="text-xl font-semibold">Payment Method</h2>
+                  </div>
+                </div>
+
+                {/* Payment Content */}
+                <div className="bg-muted/30 rounded-lg p-4">
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                     <div className="space-y-3">
                       {isPaymentMethodEnabled('razorpay') && (
-                        <div className="flex items-start space-x-3 p-4 border rounded-lg">
-                          <RadioGroupItem value="razorpay" id="razorpay" />
+                        <div className="flex items-start space-x-3 p-3 border rounded-lg">
+                          <RadioGroupItem value="razorpay" id="razorpay" className="mt-1" />
                           <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
                             <div className="space-y-1">
                               <div className="font-medium">Credit/Debit Card</div>
@@ -725,8 +833,8 @@ const CheckoutPage = () => {
                         </div>
                       )}
                       {isPaymentMethodEnabled('cashfree') && (
-                        <div className="flex items-start space-x-3 p-4 border rounded-lg">
-                          <RadioGroupItem value="cashfree" id="cashfree" />
+                        <div className="flex items-start space-x-3 p-3 border rounded-lg">
+                          <RadioGroupItem value="cashfree" id="cashfree" className="mt-1" />
                           <Label htmlFor="cashfree" className="flex-1 cursor-pointer">
                             <div className="space-y-1">
                               <div className="font-medium">UPI/Wallet</div>
@@ -736,8 +844,8 @@ const CheckoutPage = () => {
                         </div>
                       )}
                       {isPaymentMethodEnabled('cod') && (
-                        <div className="flex items-start space-x-3 p-4 border rounded-lg">
-                          <RadioGroupItem value="cod" id="cod" />
+                        <div className="flex items-start space-x-3 p-3 border rounded-lg">
+                          <RadioGroupItem value="cod" id="cod" className="mt-1" />
                           <Label htmlFor="cod" className="flex-1 cursor-pointer">
                             <div className="space-y-1">
                               <div className="font-medium">Cash on Delivery</div>
@@ -747,87 +855,157 @@ const CheckoutPage = () => {
                         </div>
                       )}
                       {!isPaymentMethodEnabled('razorpay') && !isPaymentMethodEnabled('cashfree') && !isPaymentMethodEnabled('cod') && (
-                        <div className="text-center py-8">
-                          <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <div className="text-center py-6">
+                          <CreditCard className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
                           <h3 className="font-medium mb-2">No payment methods available</h3>
-                          <p className="text-muted-foreground">Please contact support for assistance</p>
+                          <p className="text-muted-foreground text-sm">Please contact support for assistance</p>
                         </div>
                       )}
                     </div>
                   </RadioGroup>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentStep(1)}>
-                      Back to Address
-                    </Button>
-                    <Button onClick={() => setCurrentStep(3)} disabled={!paymentMethod}>
-                      Review Order
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setCurrentStep(1)}
+                    className="flex-1 rounded-full"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Back to Address
+                  </Button>
+                  <Button 
+                    onClick={() => setCurrentStep(3)} 
+                    disabled={!paymentMethod}
+                    className="flex-1 rounded-full"
+                  >
+                    Review Order
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Step 3: Order Review */}
             {currentStep === 3 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    Order Review
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle className="h-6 w-6" />
+                    <h2 className="text-xl font-semibold">Review Your Order</h2>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="space-y-4">
                   {/* Shipping Address */}
-                  <div>
-                    <h4 className="font-medium mb-2">Shipping Address</h4>
-                    {selectedAddressData && (
-                      <div className="p-4 bg-muted rounded-lg">
-                        <div className="font-medium">{selectedAddressData.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{selectedAddressData.phone}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {selectedAddressData.addressLine1}
-                          {selectedAddressData.addressLine2 && `, ${selectedAddressData.addressLine2}`}
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span className="font-medium">Delivery Address</span>
+                    </div>
+                    {selectedAddressData ? (
+                      <div className="space-y-2">
+                        <div className="text-sm">
+                          <div className="font-medium">{selectedAddressData.fullName}</div>
+                          <div className="text-muted-foreground">{selectedAddressData.phone}</div>
+                          <div className="text-muted-foreground">
+                            {selectedAddressData.addressLine1}
+                            {selectedAddressData.addressLine2 && `, ${selectedAddressData.addressLine2}`}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {selectedAddressData.city}, {selectedAddressData.state} {selectedAddressData.pincode}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {selectedAddressData.city}, {selectedAddressData.state} {selectedAddressData.pincode}
-                        </div>
-                        <div className="text-sm text-muted-foreground">{selectedAddressData.country}</div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setCurrentStep(1)}
+                          className="rounded-full"
+                        >
+                          Change
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-muted-foreground text-sm">No address selected</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setCurrentStep(1)}
+                          className="mt-2 rounded-full"
+                        >
+                          Select Address
+                        </Button>
                       </div>
                     )}
                   </div>
 
                   {/* Payment Method */}
-                  <div>
-                    <h4 className="font-medium mb-2">Payment Method</h4>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <div className="font-medium capitalize">{paymentMethod}</div>
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CreditCard className="h-4 w-4" />
+                      <span className="font-medium">Payment Method</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm">
+                        <div className="font-medium capitalize">
+                          {paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                           paymentMethod === 'razorpay' ? 'Razorpay (Online)' :
+                           paymentMethod === 'cashfree' ? 'Cashfree (Online)' : paymentMethod}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {paymentMethod === 'cod' ? 'Pay when your order arrives' : 'Secure online payment'}
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setCurrentStep(2)}
+                        className="rounded-full"
+                      >
+                        Change
+                      </Button>
                     </div>
                   </div>
 
+
                   {/* Order Notes */}
-                  <div>
-                    <Label htmlFor="notes">Order Notes (Optional)</Label>
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <div className="mb-3">
+                      <span className="font-medium text-sm">Special Instructions</span>
+                    </div>
                     <Textarea
                       id="notes"
                       value={orderNotes}
                       onChange={(e) => setOrderNotes(e.target.value)}
-                      placeholder="Any special instructions for your order..."
-                      className="mt-2"
+                      placeholder="Any special instructions (optional)..."
+                      className="min-h-[60px] text-sm"
                     />
                   </div>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setCurrentStep(2)}>
-                      Back to Payment
-                    </Button>
-                    <Button onClick={handlePlaceOrder} disabled={loading} className="gap-2">
-                      <Shield className="h-4 w-4" />
-                      {loading ? 'Placing Order...' : 'Place Order'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setCurrentStep(2)}
+                    className="flex-1 rounded-full"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-1" />
+                    Back to Payment
+                  </Button>
+                  <Button 
+                    onClick={handlePlaceOrder} 
+                    disabled={loading || !selectedAddressData || !paymentMethod} 
+                    className="flex-1 rounded-full"
+                  >
+                    <Shield className="h-4 w-4 mr-1" />
+                    {loading ? 'Placing...' : 'Place Order'}
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
 

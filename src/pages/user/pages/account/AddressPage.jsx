@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -12,8 +13,10 @@ import {
   MapPin, 
   Plus, 
   Edit3, 
-  Trash2
+  Trash2,
+  Search
 } from 'lucide-react'
+import statesData from '@/data/indian-states.json'
 
 const AddressPage = () => {
   const navigate = useNavigate()
@@ -21,6 +24,9 @@ const AddressPage = () => {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState(null)
+  const [states, setStates] = useState(statesData.states)
+  const [districts, setDistricts] = useState([])
+  const [pincodeLoading, setPincodeLoading] = useState(false)
   const [formData, setFormData] = useState({
     phone: '',
     address: '',
@@ -34,6 +40,45 @@ const AddressPage = () => {
   useEffect(() => {
     fetchAddresses()
   }, [])
+
+  const fetchDistricts = (stateCode) => {
+    const state = states.find(s => s.code === stateCode);
+    if (state) {
+      setDistricts(state.districts);
+    }
+  };
+
+  const handlePincodeLookup = async (pincode) => {
+    if (!pincode || pincode.length !== 6) return
+    
+    setPincodeLoading(true)
+    try {
+      const response = await userApi.address.getPincodeDetails(pincode)
+      if (response.data.success) {
+        const data = response.data.data
+        setFormData(prev => ({
+          ...prev,
+          city: data.city || '', // Use city from API response
+          state: data.state,
+          country: 'India'
+        }))
+        
+        
+        // Find state code and fetch districts
+        const state = states.find(s => s.name === data.state)
+        if (state) {
+          fetchDistricts(state.code)
+        }
+        
+        toast.success('Address details filled automatically!')
+      }
+    } catch (error) {
+      console.error('Error fetching pincode details:', error)
+      toast.error('Unable to fetch address details for this pincode')
+    } finally {
+      setPincodeLoading(false)
+    }
+  }
 
   const fetchAddresses = async () => {
     try {
@@ -56,6 +101,11 @@ const AddressPage = () => {
       ...prev,
       [name]: value
     }))
+    
+    // Auto-fill address details when pincode is entered
+    if (name === 'postalCode' && value.length === 6) {
+      handlePincodeLookup(value)
+    }
   }
 
   const handleSelectChange = (name, value) => {
@@ -63,6 +113,18 @@ const AddressPage = () => {
       ...prev,
       [name]: value
     }))
+    
+    // Fetch districts when state changes
+    if (name === 'state') {
+      const state = states.find(s => s.name === value)
+      if (state) {
+        fetchDistricts(state.code)
+        setFormData(prev => ({
+          ...prev,
+          city: '' // Reset city when state changes
+        }))
+      }
+    }
   }
 
   const resetForm = () => {
@@ -76,6 +138,7 @@ const AddressPage = () => {
       isDefault: false
     })
     setEditingAddress(null)
+    setCityFromPincode('')
   }
 
   const handleSubmit = async (e) => {
@@ -220,6 +283,47 @@ const AddressPage = () => {
                   />
                 </div>
 
+                {/* Postal Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Postal Code *</Label>
+                  <div className="relative">
+                    <Input
+                      id="postalCode"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      placeholder="Enter 6-digit pincode"
+                      maxLength={6}
+                      required
+                    />
+                    {pincodeLoading && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Search className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter pincode to auto-fill city and state
+                  </p>
+                </div>
+
+                {/* State */}
+                <div className="space-y-2">
+                  <Label htmlFor="state">State *</Label>
+                  <Select value={formData.state} onValueChange={(value) => handleSelectChange('state', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state.code} value={state.name}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* City */}
                 <div className="space-y-2">
                   <Label htmlFor="city">City *</Label>
@@ -228,47 +332,20 @@ const AddressPage = () => {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="Enter city"
+                    placeholder="Enter city name"
                     required
                   />
                 </div>
 
-                {/* State */}
+                {/* Country - Fixed to India */}
                 <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    placeholder="Enter state"
-                    required
-                  />
-                </div>
-
-                {/* Postal Code */}
-                <div className="space-y-2">
-                  <Label htmlFor="postalCode">Postal Code *</Label>
-                  <Input
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="Enter postal code"
-                    required
-                  />
-                </div>
-
-                {/* Country */}
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country *</Label>
+                  <Label htmlFor="country">Country</Label>
                   <Input
                     id="country"
                     name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    placeholder="Enter country"
-                    required
+                    value="India"
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
 

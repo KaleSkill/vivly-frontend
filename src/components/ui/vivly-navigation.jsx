@@ -144,7 +144,7 @@ const ViblyNavigation = () => {
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center gap-6">
           {/* Logo */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center cursor-pointer" onClick={() => window.location.href = '/'}>
             <img 
               src={logo} 
               alt="Vibly Logo" 

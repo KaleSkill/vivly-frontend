@@ -41,7 +41,7 @@ const PrivacyPolicy = () => {
               
               <h3 className="text-xl font-semibold mb-3">Personal Information:</h3>
               <ul className="list-disc list-inside space-y-1 mb-4 ml-6">
-                <li>Name, email address (mirajhasanmd6@gmail.com), phone number (6287915088)</li>
+                <li>Name, email address, phone number</li>
                 <li>Shipping and billing addresses</li>
                 <li>Payment information (processed securely by Razorpay)</li>
                 <li>Account credentials and preferences</li>
@@ -118,7 +118,7 @@ const PrivacyPolicy = () => {
                 <li>Withdrawal of consent</li>
               </ul>
               <p className="text-sm text-muted-foreground">
-                To exercise these rights, please contact us at mirajhasanmd6@gmail.com
+                To exercise these rights, please contact us at vibly85@gmail.com
               </p>
             </section>
 
@@ -172,8 +172,8 @@ const PrivacyPolicy = () => {
                   If you have any questions about this Privacy Policy, please contact us:
                 </p>
                 <div className="space-y-2">
-                  <p><strong>Email:</strong> mirajhasanmd6@gmail.com</p>
-                  <p><strong>Phone:</strong> +91-6287915088</p>
+                  <p><strong>Email:</strong> vibly85@gmail.com</p>
+                  <p><strong>Phone:</strong> 75430 49556</p>
                   <p><strong>Website:</strong> https://vibly.in</p>
                   <p><strong>Business Name:</strong> Vibly Retail Private Limited</p>
                 </div>

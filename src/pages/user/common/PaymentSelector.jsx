@@ -140,9 +140,13 @@ export const PaymentSelector = ({ onSelectPayment, selectedPayment, onPlaceOrder
             key: key_id, // Use key_id from response
             amount: paymentOrder.amount,
             currency: paymentOrder.currency,
-            name: "Vibly Store",
+            name: "vibly.in",
             description: "Payment for your order",
             order_id: providerOrderId,
+            image: "https://res.cloudinary.com/dnfknlwos/image/upload/v1759602472/vibly1_fhaeud.png",
+            theme: {
+              color: "#002C0F"
+            },
             handler: async function (response) {
               try {
                 // Verify payment

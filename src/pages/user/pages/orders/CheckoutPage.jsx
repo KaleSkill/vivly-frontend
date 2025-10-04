@@ -344,9 +344,13 @@ const CheckoutPage = () => {
       key: keyId,
       amount: paymentOrder.amount,
       currency: paymentOrder.currency,
-      name: "Your Store",
+      name: "vibly.in",
       description: `Order #${tempOrderId}`,
       order_id: paymentOrder.id,
+      image: "https://res.cloudinary.com/dnfknlwos/image/upload/v1759602472/vibly1_fhaeud.png",
+      theme: {
+        color: "#002C0F"
+      },
       handler: async function (response) {
         try {
           // Verify payment
@@ -375,9 +379,6 @@ const CheckoutPage = () => {
         name: "Customer",
         email: "customer@example.com",
         contact: addresses.find(addr => addr._id === selectedAddress)?.phone || ""
-      },
-      theme: {
-        color: "#3399cc"
       }
     };
 

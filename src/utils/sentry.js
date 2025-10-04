@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react";
 async function initSentry() {
     try {
         Sentry.init({
-            dsn: "https://1123a21304cac4864adc31230abbedf8@o4510117401395200.ingest.us.sentry.io/4510117512544256",
+            dsn: import.meta.env.VITE_SENTRY_DSN,
             sendDefaultPii: true
         });
     } catch (error) {

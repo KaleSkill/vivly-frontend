@@ -826,7 +826,7 @@ const CheckoutPage = () => {
                           <RadioGroupItem value="razorpay" id="razorpay" className="mt-1" />
                           <Label htmlFor="razorpay" className="flex-1 cursor-pointer">
                             <div className="space-y-1">
-                              <div className="font-medium">Credit/Debit Card</div>
+                              <div className="font-medium">Pay Online</div>
                               <div className="text-sm text-muted-foreground">Pay securely with Razorpay</div>
                             </div>
                           </Label>
@@ -837,7 +837,7 @@ const CheckoutPage = () => {
                           <RadioGroupItem value="cashfree" id="cashfree" className="mt-1" />
                           <Label htmlFor="cashfree" className="flex-1 cursor-pointer">
                             <div className="space-y-1">
-                              <div className="font-medium">UPI/Wallet</div>
+                              <div className="font-medium">UPI</div>
                               <div className="text-sm text-muted-foreground">Pay with UPI or digital wallet</div>
                             </div>
                           </Label>

@@ -124,7 +124,7 @@ const PaymentSuccess = () => {
           <Package className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Order not found</h1>
           <p className="text-muted-foreground mb-6">The order you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/user/orders')}>
+          <Button onClick={() => navigate('/user/orders')} className="rounded-full">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Orders
           </Button>
@@ -145,7 +145,7 @@ const PaymentSuccess = () => {
           <p className="text-muted-foreground mb-4">
             Thank you for your order. We've received your payment and your order is being processed.
           </p>
-          <Badge className={`${getStatusBadgeColor(order.overallStatus)} text-sm`}>
+          <Badge className={`${getStatusBadgeColor(order.overallStatus)} text-sm rounded-full`}>
             {getStatusIcon(order.overallStatus)}
             <span className="ml-1">{order.overallStatus}</span>
           </Badge>
@@ -305,7 +305,7 @@ const PaymentSuccess = () => {
                 <div className="space-y-3">
                   <Button 
                     onClick={() => navigate(`/user/orders/${order.orderId}`)}
-                    className="w-full gap-2"
+                    className="w-full gap-2 rounded-full"
                   >
                     <Eye className="h-4 w-4" />
                     View Order Details
@@ -313,7 +313,7 @@ const PaymentSuccess = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => navigate('/user/orders')}
-                    className="w-full gap-2"
+                    className="w-full gap-2 rounded-full"
                   >
                     <Package className="h-4 w-4" />
                     All Orders
@@ -321,7 +321,7 @@ const PaymentSuccess = () => {
                   <Button 
                     variant="outline" 
                     onClick={() => navigate('/products')}
-                    className="w-full gap-2"
+                    className="w-full gap-2 rounded-full"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Continue Shopping

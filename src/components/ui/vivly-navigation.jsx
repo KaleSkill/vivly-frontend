@@ -376,20 +376,34 @@ const ViblyNavigation = () => {
             </DropdownMenu>
           ) : (
             <>
+              {/* Desktop Sign In and Get Started buttons */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-sm text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none"
+                  onClick={handleSignIn}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="text-sm bg-green-600 hover:bg-green-700 text-white border-none hover:border-none focus:border-none outline-none"
+                  onClick={handleSignIn}
+                >
+                  Get Started
+                </Button>
+              </div>
+              
+              {/* Mobile User Icon */}
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-sm text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none"
+                className="md:hidden text-white hover:text-green-400 hover:bg-transparent border-none hover:border-none focus:border-none outline-none p-2"
                 onClick={handleSignIn}
               >
-                Sign In
-              </Button>
-              <Button 
-                size="sm" 
-                className="text-sm bg-green-600 hover:bg-green-700 text-white border-none hover:border-none focus:border-none outline-none"
-                onClick={handleSignIn}
-              >
-                Get Started
+                <User className="h-5 w-5" />
+                <span className="sr-only">Sign In</span>
               </Button>
             </>
           )}

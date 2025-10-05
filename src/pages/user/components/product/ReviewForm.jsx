@@ -114,7 +114,7 @@ const ReviewForm = ({ productId, onReviewAdded }) => {
           <Button
             type="submit"
             disabled={submitting || rating === 0 || !comment.trim()}
-            className="w-full"
+            className="w-full rounded-full"
           >
             {submitting ? (
               <>

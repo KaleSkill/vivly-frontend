@@ -156,7 +156,7 @@ const MyOrdersPage = () => {
             <p className="text-muted-foreground mb-6">
               You haven't placed any orders yet. Start shopping to see your orders here.
             </p>
-            <Button onClick={() => navigate('/products')}>
+            <Button onClick={() => navigate('/products')} className="rounded-full">
               <Package className="h-4 w-4 mr-2" />
               Start Shopping
             </Button>
@@ -199,7 +199,7 @@ const MyOrdersPage = () => {
                         {formatDate(order.orderedAt)}
                       </div>
                     </div>
-                    <Badge className={`${getStatusBadgeColor(order.overallStatus)}`}>
+                    <Badge className={`${getStatusBadgeColor(order.overallStatus)} rounded-full`}>
                       {getStatusIcon(order.overallStatus)}
                       <span className="ml-1 text-xs">{order.overallStatus}</span>
                     </Badge>
@@ -246,7 +246,7 @@ const MyOrdersPage = () => {
                       {order.transactionId && (
                         <div className="flex items-center gap-1 ml-auto">
                           <Receipt className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
+                          <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">
                             {order.transactionId.substring(0, 8)}...
                           </span>
                         </div>
@@ -264,7 +264,7 @@ const MyOrdersPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewOrder(order.orderId)}
-                      className="w-full"
+                      className="w-full rounded-full"
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       View Order Details
@@ -306,7 +306,7 @@ const MyOrdersPage = () => {
                           {formatDate(order.orderedAt)}
                         </div>
                       </div>
-                      <Badge className={`${getStatusBadgeColor(order.overallStatus)}`}>
+                      <Badge className={`${getStatusBadgeColor(order.overallStatus)} rounded-full`}>
                         {getStatusIcon(order.overallStatus)}
                         <span className="ml-1">{order.overallStatus}</span>
                       </Badge>
@@ -337,7 +337,7 @@ const MyOrdersPage = () => {
                         {order.transactionId && (
                           <div className="flex items-center gap-1 mt-1">
                             <Receipt className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
+                            <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground">
                               {order.transactionId.substring(0, 12)}...
                             </span>
                           </div>
@@ -357,7 +357,7 @@ const MyOrdersPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewOrder(order.orderId)}
-                        className="h-9 px-4"
+                        className="h-9 px-4 rounded-full"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View Details

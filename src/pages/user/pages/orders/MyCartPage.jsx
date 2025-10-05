@@ -200,7 +200,7 @@ const MyCartPage = () => {
             <p className="text-muted-foreground mb-8 max-w-md text-center">
               Looks like you haven't added any items to your cart yet. Start shopping to add some products!
             </p>
-            <Button onClick={handleContinueShopping} className="gap-2" size="lg">
+            <Button onClick={handleContinueShopping} className="gap-2 rounded-full" size="lg">
               <Package className="h-4 w-4" />
               Continue Shopping
             </Button>
@@ -419,7 +419,7 @@ const MyCartPage = () => {
                 <div className="space-y-3 pt-4">
                   <Button 
                     onClick={handleCheckout} 
-                    className="w-full gap-2"
+                    className="w-full gap-2 rounded-full"
                     size="lg"
                   >
                     Proceed to Checkout
@@ -428,7 +428,7 @@ const MyCartPage = () => {
                   <Button 
                     variant="outline" 
                     onClick={handleContinueShopping}
-                    className="w-full gap-2"
+                    className="w-full gap-2 rounded-full"
                   >
                     <Package className="h-4 w-4" />
                     Continue Shopping

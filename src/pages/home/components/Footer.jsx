@@ -9,39 +9,42 @@ const Footer = () => {
   return (
     <footer className="bg-background border-t">
       <div className="container mx-auto px-4">
+        {/* Logo Section - Centered */}
+        <div className="py-8 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img 
+              src={logo} 
+              alt="Vibly Logo" 
+              className="w-12 h-12 object-contain"
+            />
+            <span className="text-3xl font-bold text-primary">Vibly</span>
+          </div>
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-md mx-auto">
+            Your premium destination for fashion and lifestyle. Discover quality products that define your style.
+          </p>
+          <div className="flex justify-center gap-2 mt-4">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <Facebook className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <Instagram className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+              <Twitter className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <Separator />
+
         {/* Main Footer Content */}
         <div className="py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Brand Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <img 
-                  src={logo} 
-                  alt="Vibly Logo" 
-                  className="w-10 h-10 object-contain"
-                />
-                <span className="text-2xl font-bold text-primary">Vibly</span>
-              </div>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Your premium destination for fashion and lifestyle. Discover quality products that define your style.
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                  <Facebook className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                  <Instagram className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                  <Twitter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Quick Links */}
             <div className="space-y-4">
               <h4 className="font-semibold text-sm">Quick Links</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/" className="hover:text-foreground transition-colors">Home</a></li>
                 <li><a href="/products" className="hover:text-foreground transition-colors">All Products</a></li>
                 <li><a href="/products?gender=men" className="hover:text-foreground transition-colors">Men's Collection</a></li>
                 <li><a href="/products?gender=women" className="hover:text-foreground transition-colors">Women's Collection</a></li>
@@ -62,7 +65,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Newsletter & Contact */}
+            {/* Stay Updated */}
             <div className="space-y-4">
               <h4 className="font-semibold text-sm">Stay Updated</h4>
               <p className="text-sm text-muted-foreground">
@@ -81,15 +84,15 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Phone className="h-3 w-3" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>75430 49556</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Mail className="h-3 w-3" />
-                  <span>support@vibly.com</span>
+                  <span>vibly85@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <MapPin className="h-3 w-3" />
-                  <span>123 Fashion St, Style City</span>
+                  <span>India</span>
                 </div>
               </div>
             </div>

@@ -97,7 +97,7 @@ const UserLayout = () => {
                         navigate(item.href)
                         setSidebarOpen(false)
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-full transition-colors ${
                         item.current
                           ? 'bg-primary text-primary-foreground'
                           : 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -130,7 +130,7 @@ const UserLayout = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => navigate(item.href)}
-                        className={`w-full flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        className={`w-full flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-full transition-colors ${
                           item.current
                             ? 'bg-primary text-primary-foreground'
                             : 'text-muted-foreground hover:text-foreground hover:bg-accent'

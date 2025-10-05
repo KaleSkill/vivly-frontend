@@ -239,7 +239,7 @@ const OrderDetailsPage = () => {
             <h1 className="text-2xl md:text-3xl font-bold">Order Details</h1>
             <p className="text-sm text-muted-foreground">Track your order status</p>
           </div>
-          <Badge className={`${getStatusBadgeColor(order.overallStatus)} hidden sm:flex`}>
+          <Badge className={`${getStatusBadgeColor(order.overallStatus)} hidden sm:flex rounded-full`}>
             {getStatusIcon(order.overallStatus)}
             <span className="ml-1">{order.overallStatus}</span>
           </Badge>
@@ -259,7 +259,7 @@ const OrderDetailsPage = () => {
                     <div className="text-xs text-muted-foreground">#{order.orderId}</div>
                   </div>
                 </div>
-                <Badge className={getStatusBadgeColor(order.overallStatus)}>
+                <Badge className={`${getStatusBadgeColor(order.overallStatus)} rounded-full`}>
                   {order.overallStatus}
                 </Badge>
               </div>
@@ -390,7 +390,7 @@ const OrderDetailsPage = () => {
                                 size="sm"
                                 onClick={() => handleCancelItem(item._id, item.quantity)}
                                 disabled={cancelLoading === item._id}
-                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 text-xs"
+                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 text-xs rounded-full"
                               >
                                 {cancelLoading === item._id ? (
                                   <>
@@ -412,7 +412,7 @@ const OrderDetailsPage = () => {
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleRefundRequest(item)}
-                                className="bg-blue-600 hover:bg-blue-700 text-xs"
+                                className="bg-blue-600 hover:bg-blue-700 text-xs rounded-full"
                               >
                                 <RotateCcw className="h-3 w-3 mr-1" />
                                 Request Refund
@@ -495,7 +495,7 @@ const OrderDetailsPage = () => {
                                 size="sm"
                                 onClick={() => handleCancelItem(item._id, item.quantity)}
                                 disabled={cancelLoading === item._id}
-                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700"
+                                className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 rounded-full"
                               >
                                 {cancelLoading === item._id ? (
                                   <>
@@ -517,7 +517,7 @@ const OrderDetailsPage = () => {
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleRefundRequest(item)}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 rounded-full"
                               >
                                 <RotateCcw className="h-4 w-4 mr-1" />
                                 Request Refund
@@ -638,7 +638,7 @@ const OrderDetailsPage = () => {
                   
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Payment Status</div>
-                    <Badge className={getPaymentStatusBadgeColor(order.paymentStatus)}>
+                    <Badge className={`${getPaymentStatusBadgeColor(order.paymentStatus)} rounded-full`}>
                       {order.paymentStatus}
                     </Badge>
                   </div>

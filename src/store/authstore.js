@@ -46,7 +46,7 @@ export const useAuthStore = create(
             if (user.role === 'Admin') {
               window.location.href = `${currentDomain}/admin`;
             } else {
-              window.location.href = `${currentDomain}/user/profile`;
+              window.location.href = `${currentDomain}/`;
             }
             
             return user;

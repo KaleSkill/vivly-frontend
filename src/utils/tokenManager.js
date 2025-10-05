@@ -47,11 +47,12 @@ class TokenManager {
         throw new Error('No access token received')
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[tokenManager] refreshToken failed:', error?.response?.status, error?.response?.data || error?.message)
       this.processQueue(error, null)
       
       // Clear tokens and redirect to login
       localStorage.removeItem('token')
-      window.location.href = '/'
       
       throw error
     } finally {

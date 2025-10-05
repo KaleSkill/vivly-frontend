@@ -43,9 +43,13 @@ import {
   Sparkles,
   RotateCcw,
   ChevronDown,
-  Search
+  Search,
+  Menu,
+  X
 } from 'lucide-react'
 import logo from '@/assets/logo.PNG' // edit this
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 
 const ViblyNavigation = () => {
@@ -55,6 +59,7 @@ const ViblyNavigation = () => {
   const [loading, setLoading] = useState(true)
   const [activeDropdown, setActiveDropdown] = useState(null)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
   
 
@@ -73,6 +78,7 @@ const ViblyNavigation = () => {
     try {
       setLoading(true)
       const response = await userApi.categories.getCategories()
+      console.log("all cat......",response.data)
       setCategories(response.data.data || [])
     } catch (error) {
       console.error('Error fetching categories:', error)
@@ -97,35 +103,54 @@ const ViblyNavigation = () => {
   // Organize categories by gender
   const organizeCategories = () => {
     const organized = {
+      unisex: { title: "Unisex", href: "/products?gender=unisex", subcategories: [] },
       men: { title: "Men's Fashion", href: "/products?gender=men", subcategories: [] },
-      women: { title: "Women's Fashion", href: "/products?gender=women", subcategories: [] },
-      unisex: { title: "Unisex", href: "/products?gender=unisex", subcategories: [] }
+      women: { title: "Women's Fashion", href: "/products?gender=women", subcategories: [] }
     }
+
+    const detectGenderFromName = (name) => {
+      const value = (name || '').toLowerCase()
+      if (value.includes('men') || value.includes('male') || value.includes("men's")) return 'men'
+      if (value.includes('women') || value.includes('female') || value.includes("women's") || value.includes('ladies') || value.includes('girl')) return 'women'
+      return 'unisex'
+    }
+
+    const detectedForConsole = []
 
     categories.forEach(category => {
       const categoryName = category.name?.toLowerCase() || ''
-      // Use category name as slug, convert to lowercase and replace spaces with hyphens
+     
       const categorySlug = categoryName.replace(/\s+/g, '-')
-      
-      // Determine which main category this belongs to
-      if (categoryName.includes('men') || categoryName.includes('male')) {
+     
+      const apiGender = (category.gender || '').toLowerCase()
+      const detectedGender = apiGender || detectGenderFromName(category.name)
+
+     
+      if (detectedGender === 'men') {
         organized.men.subcategories.push({
           name: category.name,
-          href: `/products?category=${categorySlug}`
+          href: `/products?category=${categorySlug}`,
+          gender: 'Men'
         })
-      } else if (categoryName.includes('women') || categoryName.includes('female') || categoryName.includes('dress')) {
+      } else if (detectedGender === 'women') {
         organized.women.subcategories.push({
           name: category.name,
-          href: `/products?category=${categorySlug}`
+          href: `/products?category=${categorySlug}`,
+          gender: 'Women'
         })
       } else {
         // Default to unisex for all other items (shirt, tshirt, etc.)
         organized.unisex.subcategories.push({
           name: category.name,
-          href: `/products?category=${categorySlug}`
+          href: `/products?category=${categorySlug}`,
+          gender: 'Unisex'
         })
       }
+
+      detectedForConsole.push({ name: category.name, slug: categorySlug, gender: detectedGender || 'unisex' })
     })
+
+   
 
     return organized
   }
@@ -140,11 +165,22 @@ const ViblyNavigation = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#002F11] backdrop-blur-sm">
-      <div className="flex h-16 items-center justify-between gap-4 bg-[#002F11] px-4 md:px-6">
+        <div className="flex h-16 items-center justify-between gap-4 bg-[#002F11] px-4 md:px-6 relative">
         {/* Left side - Logo and Navigation */}
-        <div className="flex items-center gap-6">
-          {/* Logo */}
-          <div className="flex items-center justify-center cursor-pointer" onClick={() => window.location.href = '/'}>
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* Mobile Hamburger */}
+            <Button 
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-white hover:text-green-400 hover:bg-transparent border-none focus:border-none outline-none p-2"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+
+          {/* Logo (mobile only) */}
+          <div className="flex md:hidden items-center justify-center cursor-pointer" onClick={() => window.location.href = '/'}>
             <img 
               src={logo} 
               alt="Vibly Logo" 
@@ -152,8 +188,11 @@ const ViblyNavigation = () => {
             />
           </div>
 
-          {/* Custom Navigation Menu */}
-          <nav className="hidden md:flex items-center space-x-8">
+        </div>
+
+        {/* Center - Desktop Navigation */}
+        <div className="hidden md:flex flex-1 items-center justify-start pl-6">
+          <nav className="flex items-center space-x-6">
             {/* Home */}
             <a 
               href="/" 
@@ -164,7 +203,6 @@ const ViblyNavigation = () => {
 
             {/* Dynamic Categories */}
             {Object.entries(organizedCategories).map(([key, category]) => {
-              if (category.subcategories.length === 0) return null
               return (
                 <div key={key} className="relative group">
                   <button
@@ -175,8 +213,6 @@ const ViblyNavigation = () => {
                     <span>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
-                  
-                  {/* Dropdown Menu */}
                   <AnimatePresence>
                     {activeDropdown === key && (
                       <motion.div
@@ -190,15 +226,19 @@ const ViblyNavigation = () => {
                       >
                         <div className="p-4">
                           <div className="space-y-2">
-                            {category.subcategories.map((item) => (
-                              <a
-                                key={item.name}
-                                href={item.href}
-                                className="block px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200 text-foreground"
-                              >
-                                <span className="text-sm font-medium">{item.name}</span>
-                              </a>
-                            ))}
+                            {category.subcategories.length > 0 ? (
+                              category.subcategories.map((item) => (
+                                <a
+                                  key={item.name}
+                                  href={item.href}
+                                  className="block px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors duration-200 text-foreground"
+                                >
+                                  <span className="text-sm font-medium">{item.name}</span>
+                                </a>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-sm text-muted-foreground">No products added now</div>
+                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -210,16 +250,24 @@ const ViblyNavigation = () => {
           </nav>
         </div>
 
-        {/* Center - Search Bar */}
-        <div className="hidden md:flex flex-1 max-w-lg mx-6">
-          <SearchComponent 
-            placeholder="Search products..."
-            className="w-full"
+        {/* Centered Desktop Logo */}
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center cursor-pointer" onClick={() => window.location.href = '/'}>
+          <img 
+            src={logo} 
+            alt="Vibly Logo" 
+            className="w-14 h-14 object-contain"
           />
         </div>
 
-        {/* Right side - User actions */}
+        {/* Right side - Search and User actions */}
         <div className="flex items-center gap-2">
+          {/* Desktop Search Bar */}
+          <div className="hidden md:flex max-w-md w-60 lg:w-80 mr-2">
+            <SearchComponent 
+              placeholder="Search products..."
+              className="w-full"
+            />
+          </div>
           <ModeToggle />
           
           {/* Mobile Search Icon */}
@@ -419,6 +467,70 @@ const ViblyNavigation = () => {
           />
         </div>
       )}
+
+      {/* Mobile Sidebar Menu - theme-aware with accordion */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="left" className="bg-background text-foreground w-4/5 sm:max-w-xs">
+          <SheetHeader className="p-4">
+            <SheetTitle className="text-foreground">Browse Categories</SheetTitle>
+          </SheetHeader>
+
+          <div className="px-2 pb-6">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value pre="unisex" className="border-neutral-200">
+                <AccordionTrigger className="px-3">Unisex</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    {organizedCategories.unisex.subcategories.length > 0 ? (
+                      organizedCategories.unisex.subcategories.slice(0, 12).map((item) => (
+                        <a key={item.name} href={item.href} className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+                          {item.name}
+                        </a>
+                      ))
+                    ) : (
+                      <div className="px-3 py-1.5 text-sm text-muted-foreground">No products added now</div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="men" className="border-neutral-200">
+                <AccordionTrigger className="px-3">Men</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    {organizedCategories.men.subcategories.length > 0 ? (
+                      organizedCategories.men.subcategories.slice(0, 12).map((item) => (
+                        <a key={item.name} href={item.href} className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+                          {item.name}
+                        </a>
+                      ))
+                    ) : (
+                      <div className="px-3 py-1.5 text-sm text-muted-foreground">No products added now</div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="women" className="border-neutral-200">
+                <AccordionTrigger className="px-3">Women</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-1">
+                    {organizedCategories.women.subcategories.length > 0 ? (
+                      organizedCategories.women.subcategories.slice(0, 12).map((item) => (
+                        <a key={item.name} href={item.href} className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground">
+                          {item.name}
+                        </a>
+                      ))
+                    ) : (
+                      <div className="px-3 py-1.5 text-sm text-muted-foreground">No products added now</div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   )
 }

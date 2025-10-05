@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Heart } from 'lucide-react'
-import logo from '@/assets/logo.PNG'
+import logo from '@/assets/vibly.png'
 
 const Footer = () => {
   return (

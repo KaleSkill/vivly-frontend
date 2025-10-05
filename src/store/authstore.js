@@ -77,6 +77,18 @@ export const useAuthStore = create(
       checkAuth: async () => {
         set({ isLoading: true });
         try {
+          // Ensure we have a valid access token; if missing/expired, try silent refresh
+          const currentToken = localStorage.getItem('token');
+          const needsRefresh = !currentToken || tokenManager.isTokenExpired(currentToken);
+
+          if (needsRefresh) {
+            try {
+              await get().refreshAccessToken();
+            } catch (e) {
+              // silent fail; will fall through to auth check which may set user null
+            }
+          }
+
           const response = await authApi.checkAuth();
           if (response.data) {
             const user = response.data;
@@ -145,7 +157,7 @@ export const useAuthStore = create(
           const newToken = await tokenManager.refreshToken();
           return newToken;
         } catch (error) {
-          console.error('Failed to refresh access token:', error);
+          console.error('[authstore] Failed to refresh access token:', error?.response?.status, error?.response?.data || error?.message);
           // If refresh fails, logout user
           set({ authUser: null, isLoading: false });
           toast.error('Session expired. Please login again.');

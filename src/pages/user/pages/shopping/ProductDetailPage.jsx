@@ -340,13 +340,13 @@ const ProductDetailPage = () => {
 
               {/* Color Selection */}
               {product.variants && product.variants.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Color: <span className="text-muted-foreground">
                       {product.variants.find(v => v.color._id === selectedColor)?.color?.name || 'Select a color'}
                     </span>
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     {product.variants.map((variant) => (
                       <button
                         key={variant.color._id}
@@ -355,16 +355,16 @@ const ProductDetailPage = () => {
                           setSelectedImageIndex(0)
                           setSelectedSize('')
                         }}
-                        className={`relative w-12 h-12 rounded-full border-2 transition-all hover-elevate ${
+                        className={`relative w-9 h-9 rounded-full border-2 transition-all hover-elevate ${
                           selectedColor === variant.color._id
-                            ? "border-primary scale-110"
+                            ? "border-primary scale-105"
                             : "border-border"
                         }`}
                         style={{ backgroundColor: variant.color.hexCode || getColorHex(variant.color.name) }}
                         aria-label={`Select ${variant.color.name} color`}
                       >
                         {selectedColor === variant.color._id && (
-                          <Check className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow-md" />
+                          <Check className="absolute inset-0 m-auto h-3 w-3 text-white drop-shadow-md" />
                         )}
                       </button>
                     ))}

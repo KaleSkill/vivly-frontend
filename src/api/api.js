@@ -46,8 +46,8 @@ api.interceptors.response.use(
         
         // Check if refresh token is expired (401 with redirect flag)
         if (error.response?.status === 401 && error.response?.data?.redirect) {
+            // Backend indicates refresh also failed; clear token and surface error
             tokenManager.clearToken();
-            window.location.href = '/';
         }
         
         return Promise.reject(error);

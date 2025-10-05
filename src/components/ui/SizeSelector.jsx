@@ -9,7 +9,7 @@ import {
 
 export default function SizeSelector({ sizes, selectedSize, onSizeSelect }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">Size</label>
         <Dialog>
@@ -78,13 +78,13 @@ export default function SizeSelector({ sizes, selectedSize, onSizeSelect }) {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap">
         {sizes.map((size) => (
           <Button
             key={size}
             variant={selectedSize === size ? "default" : "outline"}
             onClick={() => onSizeSelect(size)}
-            className="h-10 px-6 rounded-full"
+            className="h-8 px-4 rounded-full text-xs"
             data-testid={`button-size-${size.toLowerCase()}`}
           >
             {size}

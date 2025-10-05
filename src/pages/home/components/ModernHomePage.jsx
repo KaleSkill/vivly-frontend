@@ -254,6 +254,16 @@ const ModernHomePage = () => {
             </div>
           )}
 
+          {/* Explore more button - right aligned */}
+          {!loading && featuredProducts.length > 0 && (
+            <div className="mt-6 max-w-6xl mx-auto flex justify-center">
+              <Badge onClick={() => navigate('/products')} className="cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 transition-colors select-none rounded-full px-3 py-1">
+                Explore more
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Badge>
+            </div>
+          )}
+
         </div>
       </section>
 
@@ -373,6 +383,16 @@ const ModernHomePage = () => {
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No new arrivals available</p>
+            </div>
+          )}
+
+          {/* Explore more button - right aligned */}
+          {!loading && newArrivals.length > 0 && (
+            <div className="mt-6 max-w-6xl mx-auto flex justify-center">
+              <Badge onClick={() => navigate('/products')} className="cursor-pointer bg-primary/10 text-primary hover:bg-primary/20 transition-colors select-none rounded-full px-3 py-1">
+                Explore more
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Badge>
             </div>
           )}
         </div>

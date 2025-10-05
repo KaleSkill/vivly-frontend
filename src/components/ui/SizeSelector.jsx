@@ -78,13 +78,13 @@ export default function SizeSelector({ sizes, selectedSize, onSizeSelect }) {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {sizes.map((size) => (
           <Button
             key={size}
             variant={selectedSize === size ? "default" : "outline"}
             onClick={() => onSizeSelect(size)}
-            className="h-8 px-4 rounded-full text-xs"
+            className="h-9 px-5 rounded-full text-sm"
             data-testid={`button-size-${size.toLowerCase()}`}
           >
             {size}

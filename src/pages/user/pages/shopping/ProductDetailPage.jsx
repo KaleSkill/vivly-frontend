@@ -271,14 +271,14 @@ const ProductDetailPage = () => {
                 )}
               </div>
 
-              {/* Thumbnail Images */}
+              {/* Thumbnail Images - Horizontal Carousel */}
               {allImages.length > 1 && (
-                <div className="grid grid-cols-6 gap-2">
+                <div className="flex gap-2 overflow-x-auto scroll-smooth py-1">
                   {allImages.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`aspect-[3/4] rounded-md overflow-hidden border-2 transition-all hover-elevate ${
+                      className={`shrink-0 w-20 h-28 rounded-md overflow-hidden border-2 transition-all hover-elevate ${
                         selectedImageIndex === index
                           ? "border-primary"
                           : "border-transparent"
@@ -310,7 +310,7 @@ const ProductDetailPage = () => {
                 
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-current text-foreground" />
+                    <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                     <span className="font-medium">{reviewStats.averageRating || 0}</span>
                   </div>
                   <a href="#reviews" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

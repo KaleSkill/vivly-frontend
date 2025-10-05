@@ -33,12 +33,12 @@ api.interceptors.response.use(
                 const newToken = await tokenManager.refreshToken();
                 
                 if (newToken) {
-                    // Retry original request with new token
+                   
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
                     return api(originalRequest);
                 }
             } catch (refreshError) {
-                // Refresh failed, token manager will handle cleanup
+               
                 console.error('Token refresh failed:', refreshError);
                 return Promise.reject(refreshError);
             }

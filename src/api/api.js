@@ -6,15 +6,22 @@ const API_URL = `${Backend_url}/api`
 
 const api = axios.create({
     baseURL: API_URL,
-    withCredentials: true, 
+    // Removed withCredentials to use localStorage tokens instead of session cookies
 });
 
 // Add request interceptor to include token in headers
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    
+    // Only add token if it exists and is not expired
+    if (token && !tokenManager.isTokenExpired(token)) {
         config.headers.Authorization = `Bearer ${token}`;
+    } else if (token && tokenManager.isTokenExpired(token)) {
+        // If token is expired, don't make the request - let it fail gracefully
+        console.warn('Token expired, skipping request:', config.url);
+        return Promise.reject(new Error('Token expired'));
     }
+    
     return config;
 });
 
@@ -24,29 +31,37 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         
-        // Check if error is due to expired token (403) and we haven't already retried
-        if (error.response?.status === 403 && !originalRequest._retry) {
+        // Check if error is due to expired token (401 or 403) and we haven't already retried
+        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
             originalRequest._retry = true;
+            
+            // Only try to refresh if we have a refresh token
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (!refreshToken) {
+                // No refresh token available, clear all tokens and reject
+                tokenManager.clearToken();
+                return Promise.reject(new Error('No refresh token available'));
+            }
             
             try {
                 // Use token manager to refresh token
                 const newToken = await tokenManager.refreshToken();
                 
                 if (newToken) {
-                   
+                    // Update the original request with new token
                     originalRequest.headers.Authorization = `Bearer ${newToken}`;
                     return api(originalRequest);
                 }
             } catch (refreshError) {
-               
                 console.error('Token refresh failed:', refreshError);
+                // Clear tokens and redirect to login
+                tokenManager.clearToken();
                 return Promise.reject(refreshError);
             }
         }
         
-        // Check if refresh token is expired (401 with redirect flag)
-        if (error.response?.status === 401 && error.response?.data?.redirect) {
-            // Backend indicates refresh also failed; clear token and surface error
+        // If refresh token is also expired or invalid, clear tokens
+        if (error.response?.status === 401) {
             tokenManager.clearToken();
         }
         
@@ -57,6 +72,12 @@ api.interceptors.response.use(
 
 
 
+// Helper function to check if user is authenticated
+export const isAuthenticated = () => {
+    const token = localStorage.getItem('token');
+    return token && !tokenManager.isTokenExpired(token);
+};
+
 //auth api
 export const authApi = {
     // Google OAuth login
@@ -66,16 +87,26 @@ export const authApi = {
 
     // Get current user
     getCurrentUser: () => {
+        // If no token exists, return a rejected promise immediately
+        if (!isAuthenticated()) {
+            return Promise.reject(new Error('No valid token found'));
+        }
         return api.get('/auth/me');
     },
 
     // Check authentication status
     checkAuth: () => {
+        // If no token exists, return a rejected promise immediately
+        if (!isAuthenticated()) {
+            return Promise.reject(new Error('No valid token found'));
+        }
         return api.get('/auth/me');
     },
 
     // Logout
     logout: () => {
+        // Clear local token first
+        tokenManager.clearToken();
         return api.get('/auth/logout');
     },
 

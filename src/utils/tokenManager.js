@@ -39,7 +39,11 @@ class TokenManager {
       
       if (response.data?.data?.accessToken) {
         const newToken = response.data.data.accessToken
+        // Store both access and refresh tokens
         localStorage.setItem('token', newToken)
+        if (response.data.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.data.refreshToken)
+        }
         
         this.processQueue(null, newToken)
         return newToken
@@ -51,8 +55,8 @@ class TokenManager {
       console.error('[tokenManager] refreshToken failed:', error?.response?.status, error?.response?.data || error?.message)
       this.processQueue(error, null)
       
-      // Clear tokens and redirect to login
-      localStorage.removeItem('token')
+      // Clear all tokens and redirect to login
+      this.clearToken()
       
       throw error
     } finally {
@@ -80,13 +84,17 @@ class TokenManager {
   }
 
   // Set token
-  setToken(token) {
+  setToken(token, refreshToken = null) {
     localStorage.setItem('token', token)
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken)
+    }
   }
 
   // Clear token
   clearToken() {
     localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
   }
 }
 

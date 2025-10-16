@@ -886,3 +886,21 @@ export const userApi = {
         }
     }
 };
+
+
+//shiprocket api
+export const shiprocketApi = {
+    // Generate Shiprocket token
+    generateToken: (credentials) => {
+        return api.post('/admin/shiprocket/generate-token', credentials);
+    },
+
+    // Logout from Shiprocket
+    logout: (token) => {
+        return api.post('/admin/shiprocket/token-logout', {}, {
+            headers: {
+                'x-shiprocket-token': token
+            }
+        });
+    }
+};

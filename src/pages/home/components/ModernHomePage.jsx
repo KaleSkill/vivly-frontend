@@ -137,7 +137,7 @@ const ModernHomePage = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20">
+      <section className="py-20 max-md:py-10 max-sm:py-5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <motion.div

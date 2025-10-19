@@ -93,9 +93,10 @@ const ModernHomePage = () => {
       {/* Banner Carousel */}
       <section className="relative overflow-hidden">
         {loading ? (
-          <div className="h-48 sm:h-64 md:h-80 lg:h-96 bg-muted animate-pulse flex items-center justify-center">
-            <p className="text-muted-foreground">Loading banners...</p>
+        <div className="h-48 sm:h-64 md:h-80 lg:h-96 bg-muted flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center">
           </div>
+        </div>
         ) : banners.length > 0 ? (
           <div className="relative h-48 sm:h-64 md:h-80 lg:h-96">
             {banners.map((banner, index) => (

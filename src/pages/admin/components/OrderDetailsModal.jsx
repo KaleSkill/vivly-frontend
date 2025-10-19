@@ -182,6 +182,7 @@ export const OrderDetailsModal = ({ order, onClose, onUpdateStatus }) => {
               <CardContent>
                 <div className="space-y-4">
                   {orderDetails?.products?.map((product, index) => (
+                    
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex items-start gap-4">
                         <img
@@ -195,10 +196,10 @@ export const OrderDetailsModal = ({ order, onClose, onUpdateStatus }) => {
                             Color: {product.color?.name} | Size: {product.size}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            Quantity: {product.quantity} | Price: ₹{product.amount?.price}
+                            Quantity: {product.quantity} | Price: ₹{product.amount}
                           </p>
                           <p className="font-medium">
-                            Total: ₹{product.amount?.totalAmount}
+                            Total: ₹{formatPrice(product.amount)}
                           </p>
                         </div>
                         <div className="text-right">

@@ -170,6 +170,14 @@ export const OrderManagement = () => {
     return parseFloat(amount || 0).toFixed(2);
   };
 
+  const getImageUrl = (imageData) => {
+    if (!imageData) return '/placeholder-product.jpg';
+    if (typeof imageData === 'string') return imageData;
+    if (imageData.secure_url) return imageData.secure_url;
+    if (imageData.url) return imageData.url;
+    return '/placeholder-product.jpg';
+  };
+
   return (
     <div className="space-y-6">
       {/* Simple Header */}
@@ -296,7 +304,7 @@ export const OrderManagement = () => {
                   <TableRow>
                     <TableHead>Order ID</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead>Items</TableHead>
+                    <TableHead>Order Items</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ordered At</TableHead>
@@ -326,9 +334,48 @@ export const OrderManagement = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          <span>{order.totalItems} items</span>
+                        <div className="space-y-2 max-w-xs">
+                          {order.items && order.items.slice(0, 2).map((item, index) => (
+                            <div key={index} className="flex items-center gap-2 p-2 border rounded-lg hover:bg-muted/50 transition-colors">
+                              <img
+                                src={getImageUrl(item.product?.image)}
+                                alt={item.product?.name || 'Product'}
+                                className="w-8 h-8 object-cover rounded flex-shrink-0"
+                                onError={(e) => {
+                                  e.target.src = '/placeholder-product.jpg';
+                                }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate" title={item.product?.name || 'Product'}>
+                                  {item.product?.name || 'Product'}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.color?.name} • {item.size} • Qty: {item.quantity}
+                                </p>
+                                <p className="text-xs font-medium text-green-600">
+                                  ₹{formatPrice(item.amount)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                          {order.items && order.items.length > 2 && (
+                            <div className="text-center">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-xs h-6"
+                                onClick={() => handleViewOrder(order)}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                +{order.items.length - 2} more items
+                              </Button>
+                            </div>
+                          )}
+                          {order.items && order.items.length <= 2 && (
+                            <div className="text-xs text-muted-foreground text-center">
+                              Total: {order.totalItems} items
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>

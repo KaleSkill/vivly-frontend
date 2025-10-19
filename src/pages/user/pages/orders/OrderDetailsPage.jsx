@@ -42,6 +42,8 @@ const OrderDetailsPage = () => {
   const [refundDialogOpen, setRefundDialogOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [cancelLoading, setCancelLoading] = useState(null)
+  const [cancelQuantity, setCancelQuantity] = useState({})
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   useEffect(() => {
     fetchOrderDetails()
@@ -90,8 +92,10 @@ const OrderDetailsPage = () => {
       setCancelLoading(itemId)
       const response = await userApi.newOrders.cancelOrderItem(itemId, quantity)
       if (response.data.success) {
-        toast.success('Item cancelled successfully')
+        toast.success(`${quantity} item(s) cancelled successfully`)
         fetchOrderDetails() // Refresh order details
+        setShowCancelDialog(false)
+        setCancelQuantity({})
       } else {
         toast.error(response.data.message || 'Failed to cancel item')
       }
@@ -101,6 +105,19 @@ const OrderDetailsPage = () => {
     } finally {
       setCancelLoading(null)
     }
+  }
+
+  const handleCancelClick = (item) => {
+    setSelectedItem(item)
+    setCancelQuantity({ [item._id]: 1 })
+    setShowCancelDialog(true)
+  }
+
+  const handleCancelQuantityChange = (itemId, quantity) => {
+    setCancelQuantity(prev => ({
+      ...prev,
+      [itemId]: Math.max(1, Math.min(quantity, selectedItem?.quantity || 1))
+    }))
   }
 
   const handleRefundRequest = (item) => {
@@ -173,6 +190,7 @@ const OrderDetailsPage = () => {
   }
 
   const formatPrice = (price) => {
+    if (!price || isNaN(price)) return '0.00'
     return parseFloat(price).toFixed(2)
   }
 
@@ -372,11 +390,11 @@ const OrderDetailsPage = () => {
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm">Unit Price</span>
-                            <span className="text-sm">₹{formatPrice(item.amount?.price || item.price)}</span>
+                            <span className="text-sm">₹{formatPrice(item.amount)}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-medium">Total</span>
-                            <span className="text-lg font-bold text-primary">₹{formatPrice(item.amount?.totalAmount || (item.price * item.quantity))}</span>
+                            <span className="text-lg font-bold text-primary">₹{formatPrice(item.amount * item.quantity)}</span>
                           </div>
                         </div>
                         
@@ -388,7 +406,7 @@ const OrderDetailsPage = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleCancelItem(item._id, item.quantity)}
+                                onClick={() => handleCancelClick(item)}
                                 disabled={cancelLoading === item._id}
                                 className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 text-xs rounded-full"
                               >
@@ -475,12 +493,12 @@ const OrderDetailsPage = () => {
                               </div>
                               <div>
                                 <span className="text-sm text-muted-foreground">Unit Price</span>
-                                <div className="font-medium">₹{formatPrice(item.amount?.price || item.price)}</div>
+                                <div className="font-medium">₹{formatPrice(item.amount)}</div>
                               </div>
                             </div>
                             <div className="text-right">
                               <span className="text-sm text-muted-foreground">Total</span>
-                              <div className="text-xl font-bold text-primary">₹{formatPrice(item.amount?.totalAmount || (item.price * item.quantity))}</div>
+                              <div className="text-xl font-bold text-primary">₹{formatPrice(item.amount * item.quantity)}</div>
                             </div>
                           </div>
                         </div>
@@ -493,7 +511,7 @@ const OrderDetailsPage = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleCancelItem(item._id, item.quantity)}
+                                onClick={() => handleCancelClick(item)}
                                 disabled={cancelLoading === item._id}
                                 className="text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 rounded-full"
                               >
@@ -707,6 +725,102 @@ const OrderDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Cancel Item Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel Item</DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                  <img
+                    src={getImageUrl(selectedItem.product?.image)}
+                    alt={selectedItem.product?.name || 'Product'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/placeholder-product.jpg';
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">{selectedItem.product?.name || 'Product'}</h4>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Color: {selectedItem.color?.name || 'N/A'} • Size: {selectedItem.size || 'N/A'}
+                  </div>
+                  <div className="text-sm font-medium mt-2">
+                    Available Quantity: {selectedItem.quantity}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Quantity to Cancel</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCancelQuantityChange(selectedItem._id, (cancelQuantity[selectedItem._id] || 1) - 1)}
+                    disabled={(cancelQuantity[selectedItem._id] || 1) <= 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    -
+                  </Button>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedItem.quantity}
+                    value={cancelQuantity[selectedItem._id] || 1}
+                    onChange={(e) => handleCancelQuantityChange(selectedItem._id, parseInt(e.target.value) || 1)}
+                    className="w-20 h-8 text-center border border-input rounded-md"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCancelQuantityChange(selectedItem._id, (cancelQuantity[selectedItem._id] || 1) + 1)}
+                    disabled={(cancelQuantity[selectedItem._id] || 1) >= selectedItem.quantity}
+                    className="h-8 w-8 p-0"
+                  >
+                    +
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Total refund amount: ₹{formatPrice(selectedItem.amount * (cancelQuantity[selectedItem._id] || 1))}
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCancelDialog(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleCancelItem(selectedItem._id, cancelQuantity[selectedItem._id] || 1)}
+                  disabled={cancelLoading === selectedItem._id}
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                >
+                  {cancelLoading === selectedItem._id ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-1" />
+                      Cancelling...
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-4 w-4 mr-1" />
+                      Cancel Item
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Refund Request Dialog */}
       <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>

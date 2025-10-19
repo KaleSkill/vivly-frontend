@@ -66,22 +66,22 @@ const CartSheet = ({ children, autoOpen = false }) => {
             <div className="space-y-4">
               {items.map((item) => (
                 <div key={`${item.productId}-${item.colorId}-${item.size}`} className="flex gap-4 group">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  <button onClick={() =>{ closeCart(); navigate(`/products/${item.productId}`)}}  className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 cursor-pointer">
                     <img
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
-                  </div>
+                  </button>
                   <div className="flex-1 space-y-1 min-w-0">
-                    <h4 className="font-medium text-sm line-clamp-2 leading-tight">{item.name}</h4>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <button onClick={() =>{ closeCart(); navigate(`/products/${item.productId}`)}}  className="font-medium text-sm line-clamp-2 leading-tight cursor-pointer">{item.name}</button>
+                    <button onClick={() =>{ closeCart(); navigate(`/products/${item.productId}`)}}  className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                       <span className="px-2 py-1 bg-muted rounded-full text-xs">
                         {item.colorName}
                       </span>
                       <span>•</span>
                       <span>Size {item.size}</span>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">
                         {formatPrice(item.price)}

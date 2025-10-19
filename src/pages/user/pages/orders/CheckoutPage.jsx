@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   Plus,
   CheckCircle,
-  Truck,
   Shield,
   Search
 } from 'lucide-react';
@@ -379,34 +378,6 @@ const CheckoutPage = () => {
     }
   };
 
-  const handleOnlinePayment = async (orderId, amount, provider, addressObj) => {
-    try {
-      // Create payment order with the payment gateway
-      const paymentData = {
-        orderId,
-        amount: amount * 100, // Convert to paise/cents
-        provider,
-        customerName: addressObj.phone, // Using phone as identifier
-        customerEmail: 'customer@example.com', // You might want to get this from user profile
-        customerPhone: addressObj.phone
-      };
-
-      const paymentResponse = await userApi.payments.createPaymentOrder(paymentData);
-      
-      if (paymentResponse.data.success) {
-        const { transactionId, paymentOrder, key_id } = paymentResponse.data.data;
-        
-        if (provider === 'razorpay') {
-          await openRazorpayPayment(paymentOrder, key_id, transactionId, orderId);
-        } else if (provider === 'cashfree') {
-          await openCashfreePayment(paymentOrder, transactionId, orderId);
-        }
-      }
-    } catch (error) {
-      console.error('Error creating payment order:', error);
-      toast.error('Failed to initialize payment. Please try again.');
-    }
-  };
 
   const openRazorpayPayment = async (paymentOrder, keyId, transactionId, tempOrderId) => {
     const options = {
@@ -536,7 +507,7 @@ const CheckoutPage = () => {
         colorId: item.colorId,
         size: item.size,
         quantity: item.quantity,
-        price: item.price
+        price: item.isOnSale ? item.salePrice.discountedPrice : item.nonSalePrice.discountedPrice
       }))
     });
     
@@ -547,7 +518,7 @@ const CheckoutPage = () => {
           colorId: item.colorId,
           size: item.size,
           quantity: item.quantity,
-          price: item.price
+          price: item.isOnSale ? item.salePrice.discountedPrice : item.nonSalePrice.discountedPrice
         })),
         shippingInfo: {
           address: selectedAddressObj.address,

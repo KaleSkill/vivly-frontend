@@ -25,7 +25,7 @@ const ProductCard = ({
   const getProductPrice = (product) => {
     // If product is on sale, use sale price
     if (product.isOnSale && product.salePrice) {
-      return parseFloat(product.salePrice.discountedPrice || product.salePrice.price || 0)
+      return parseFloat(product.salePrice.discountedPrice || product.nonSalePrice.discountedPrice || 0)
     }
     // Otherwise use non-sale price
     return parseFloat(product.nonSalePrice?.discountedPrice || product.nonSalePrice?.price || 0)
@@ -33,10 +33,10 @@ const ProductCard = ({
 
   const getOriginalPrice = (product) => {
     // If product is on sale, show original non-sale price
-    if (product.isOnSale && product.nonSalePrice) {
-      return parseFloat(product.nonSalePrice.discountedPrice || product.nonSalePrice.price || 0)
+    if (product.isOnSale && product.salePrice) {
+      return parseFloat(product.salePrice.price || 0)
     }
-    return null
+    return parseFloat(product.nonSalePrice.price || 0)
   }
 
   const getColorHex = (colorName) => {
@@ -102,7 +102,7 @@ const ProductCard = ({
                 {product.variants.slice(0, 3).map((variant, idx) => (
                   <div
                     key={idx}
-                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-background shadow-sm"
+                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-sm border border-white"
                     style={{ 
                       backgroundColor: variant.color?.hexCode || getColorHex(variant.color?.name)
                     }}

@@ -34,6 +34,7 @@ const MyOrdersPage = () => {
       setLoading(true)
       const response = await userApi.newOrders.getUserOrders()
       if (response.data.success) {
+        console.log('Orders data:', response.data.data)
         setOrders(response.data.data)
       }
     } catch (error) {
@@ -98,6 +99,7 @@ const MyOrdersPage = () => {
   }
 
   const formatPrice = (price) => {
+    if (!price || isNaN(price)) return '0.00'
     return parseFloat(price).toFixed(2)
   }
 
@@ -205,31 +207,36 @@ const MyOrdersPage = () => {
                     </Badge>
                   </div>
 
-                  {/* Product Image and Info */}
-                  <div className="flex gap-3">
-                    <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      {order.items && order.items.length > 0 ? (
-                        <img
-                          src={getImageUrl(order.items[0].product?.image)}
-                          alt={order.items[0].product?.name || 'Product'}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/placeholder-product.jpg';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
+                  {/* Product Images and Info */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium">
+                      {order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}
                     </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium mb-1">
-                        {order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}
-                      </div>
-                      {order.items && order.items.length > 1 && (
-                        <div className="text-xs text-muted-foreground">
-                          +{order.items.length - 1} more items
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {order.items && order.items.slice(0, 4).map((item, index) => (
+                        <div key={index} className="flex-shrink-0">
+                          <div className="w-12 h-12 bg-muted rounded-lg overflow-hidden">
+                            <img
+                              src={getImageUrl(item.product?.image)}
+                              alt={item.product?.name || 'Product'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-product.jpg';
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-center mt-1 text-muted-foreground">
+                            Qty: {item.quantity}
+                          </div>
+                        </div>
+                      ))}
+                      {order.items && order.items.length > 4 && (
+                        <div className="flex-shrink-0 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              +{order.items.length - 4}
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -274,23 +281,6 @@ const MyOrdersPage = () => {
 
                 {/* Desktop Layout - Horizontal */}
                 <div className="hidden md:flex gap-6">
-                  {/* Order Image */}
-                  <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                    {order.items && order.items.length > 0 ? (
-                      <img
-                        src={getImageUrl(order.items[0].product?.image)}
-                        alt={order.items[0].product?.name || 'Product'}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-product.jpg';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
                   
                   {/* Order Details */}
                   <div className="flex-1 min-w-0">
@@ -316,14 +306,32 @@ const MyOrdersPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                       {/* Items Info */}
                       <div>
-                        <div className="text-sm font-medium mb-1">
+                        <div className="text-sm font-medium mb-2">
                           {order.totalItems} {order.totalItems === 1 ? 'item' : 'items'}
                         </div>
-                        {order.items && order.items.length > 1 && (
-                          <div className="text-xs text-muted-foreground">
-                            +{order.items.length - 1} more items
-                          </div>
-                        )}
+                        <div className="space-y-1">
+                          {order.items && order.items.slice(0, 3).map((item, index) => (
+                            <div key={index} className="text-xs text-muted-foreground flex items-center gap-2">
+                              <div className="w-4 h-4 bg-muted rounded overflow-hidden flex-shrink-0">
+                                <img
+                                  src={getImageUrl(item.product?.image)}
+                                  alt={item.product?.name || 'Product'}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.src = '/placeholder-product.jpg';
+                                  }}
+                                />
+                              </div>
+                              <span className="truncate">{item.product?.name}</span>
+                              <span className="text-primary font-medium">×{item.quantity}</span>
+                            </div>
+                          ))}
+                          {order.items && order.items.length > 3 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{order.items.length - 3} more items
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Payment Method */}

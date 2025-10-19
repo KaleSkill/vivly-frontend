@@ -13,6 +13,7 @@ const ProductFilters = ({
   searchTerm,
   pagination,
   onFilterChange,
+  onClearFilter,
   onSearchChange,
   onClearSearch,
   onClearAllFilters
@@ -176,12 +177,36 @@ const ProductFilters = ({
         </div>
 
         {/* Active Filters Display */}
-        {Object.entries(filters).some(([key, value]) => value && value !== 'all' && value !== '') && (
+        {Object.entries(filters).some(([key, value]) => {
+          // Check if filter has an active value
+          if (!value || value === 'all' || value === '') return false
+          
+          // Special handling for boolean filters
+          if (key === 'isOnSale' || key === 'isActive') {
+            return value === 'true' || value === 'false'
+          }
+          
+          // Special handling for search
+          if (key === 'search') {
+            return value.trim() !== ''
+          }
+          
+          return true
+        }) && (
           <div className="space-y-2">
             <Label className="text-sm font-medium">Active Filters:</Label>
             <div className="flex flex-wrap gap-2">
               {Object.entries(filters).map(([key, value]) => {
+                // Use the same logic as the condition above
                 if (!value || value === 'all' || value === '') return null
+                
+                // Special handling for boolean filters
+                if (key === 'isOnSale' || key === 'isActive') {
+                  if (value !== 'true' && value !== 'false') return null
+                }
+                
+                // Special handling for search
+                if (key === 'search' && value.trim() === '') return null
                 
                 const filterLabels = {
                   gender: 'Gender',
@@ -189,30 +214,51 @@ const ProductFilters = ({
                   color: 'Color',
                   priceLte: 'Max Price',
                   priceGte: 'Min Price',
-                  sort: 'Sort',
+                  sort: 'Sort By',
                   isOnSale: 'Sale Status',
                   isActive: 'Status',
                   search: 'Search'
                 }
                 
+                // Format display value based on filter type
+                const getDisplayValue = (key, value) => {
+                  switch (key) {
+                    case 'isOnSale':
+                      return value === 'true' ? 'On Sale' : 'Not on Sale'
+                    case 'isActive':
+                      return value === 'true' ? 'Active' : 'Inactive'
+                    case 'priceLte':
+                      return `≤ ₹${value}`
+                    case 'priceGte':
+                      return `≥ ₹${value}`
+                    case 'sort':
+                      const sortLabels = {
+                        newest: 'Newest',
+                        oldest: 'Oldest',
+                        lowToHigh: 'Price: Low to High',
+                        highToLow: 'Price: High to Low',
+                        alphabetical: 'Alphabetical',
+                        bestSelling: 'Best Selling'
+                      }
+                      return sortLabels[value] || value
+                    default:
+                      return value
+                  }
+                }
+
                 return (
                   <div
                     key={key}
                     className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm"
                   >
                     <span className="font-medium">{filterLabels[key]}:</span>
-                    <span>{value}</span>
+                    <span>{getDisplayValue(key, value)}</span>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-4 w-4 p-0 hover:bg-primary/20"
-                      onClick={() => {
-                        if (key === 'search') {
-                          onClearSearch()
-                        } else {
-                          onFilterChange(key, key === 'sort' ? 'newest' : 'all')
-                        }
-                      }}
+                      onClick={() => onClearFilter(key)}
+                      title={`Clear ${filterLabels[key] || key} filter`}
                     >
                       <X className="h-3 w-3" />
                     </Button>

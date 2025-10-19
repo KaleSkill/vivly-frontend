@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "sonner";
 import { authApi } from "../api/api";
-import { tokenManager } from "../utils/tokenManager";
 
 export const useAuthStore = create(
   persist(
@@ -64,31 +63,49 @@ export const useAuthStore = create(
       // Action to log the user out
       logout: async () => {
         try {
+          // Try to call backend logout API
           await authApi.logout();
         } catch (error) {
-          console.log("logout error", error);
+          console.log("Backend logout error (continuing with local logout):", error);
+          // Continue with local logout even if backend call fails
         }
-        tokenManager.clearToken();
+        
+        // Always clear local storage and state
+        localStorage.clear();
         set({ authUser: null, isLoading: false });
+        
+        // Show success message
         toast.success("Logout successful");
+        
+        // Redirect to login page to ensure clean state
+        window.location.href = '/login';
       },
       
       // Action to check authentication status on initial load
       checkAuth: async () => {
         set({ isLoading: true });
         try {
-          // Ensure we have a valid access token; if missing/expired, try silent refresh
+          // Check if we have a token
           const currentToken = localStorage.getItem('token');
-          const needsRefresh = !currentToken || tokenManager.isTokenExpired(currentToken);
-
-          if (needsRefresh) {
-            try {
-              await get().refreshAccessToken();
-            } catch (e) {
-              // silent fail; will fall through to auth check which may set user null
-            }
+          
+          // If no token, user is not authenticated
+          if (!currentToken) {
+            set({ authUser: null, isLoading: false });
+            return;
           }
 
+          // Try to refresh token if needed
+          try {
+            await get().refreshAccessToken();
+          } catch (e) {
+            // If refresh fails, clear everything and set user as null
+            console.log('Token refresh failed, clearing auth state');
+            localStorage.clear();
+            set({ authUser: null, isLoading: false });
+            return;
+          }
+
+          // Check authentication with backend
           const response = await authApi.checkAuth();
           if (response.data) {
             const user = response.data;
@@ -98,13 +115,15 @@ export const useAuthStore = create(
               isLoading: false
             });
           } else {
+            // No user data, clear everything
+            localStorage.clear();
             set({ authUser: null, isLoading: false });
           }
         } catch (error) {
           console.error('Auth check failed:', error);
           
-          // If token is expired, try to refresh
-          if (error.response?.status === 403) {
+          // If token is expired or invalid, try to refresh
+          if (error.response?.status === 401 || error.response?.status === 403) {
             try {
               const newToken = await get().refreshAccessToken();
               if (newToken) {
@@ -123,6 +142,8 @@ export const useAuthStore = create(
             }
           }
           
+          // Clear everything on any auth failure
+          localStorage.clear();
           set({ authUser: null, isLoading: false });
         }
       },
@@ -154,13 +175,21 @@ export const useAuthStore = create(
       // Method to refresh access token
       refreshAccessToken: async () => {
         try {
-          const newToken = await tokenManager.refreshToken();
-          return newToken;
+          const response = await authApi.refreshToken();
+          if (response.data?.data?.accessToken) {
+            const newToken = response.data.data.accessToken;
+            localStorage.setItem('token', newToken);
+            if (response.data.data.refreshToken) {
+              localStorage.setItem('refreshToken', response.data.data.refreshToken);
+            }
+            return newToken;
+          }
         } catch (error) {
           console.error('[authstore] Failed to refresh access token:', error?.response?.status, error?.response?.data || error?.message);
-          // If refresh fails, logout user
+          // Clear everything on refresh failure
+          localStorage.clear();
           set({ authUser: null, isLoading: false });
-          toast.error('Session expired. Please login again.');
+          // Don't show toast here as it might be called during normal logout
         }
         return null;
       },

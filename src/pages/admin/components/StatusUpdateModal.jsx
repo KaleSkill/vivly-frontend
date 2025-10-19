@@ -9,13 +9,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { adminApi } from '@/api/api';
 import { toast } from 'sonner';
-import { Package, AlertCircle, CheckCircle } from 'lucide-react';
+import { Package, AlertCircle, CheckCircle, Truck, X } from 'lucide-react';
+import { ShippingModal } from './ShippingModal';
 
 export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showShippingModal, setShowShippingModal] = useState(false);
   const [updateData, setUpdateData] = useState({
     itemId: '',
     quantity: 1,
@@ -234,18 +236,48 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
     return config?.icon || '📦';
   };
 
+  const hasOrderedItems = () => {
+    if (!orderDetails?.products) return false;
+    
+    for (const product of orderDetails.products) {
+      if (product.itemsGroupedByStatus && product.itemsGroupedByStatus['Ordered']) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleShippingUpdate = () => {
+    setShowShippingModal(false);
+    onUpdate(); // Refresh order details
+  };
+
   if (!order) return null;
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Update Order Status - {order.orderId}
-          </DialogTitle>
-          <div className="text-sm text-muted-foreground">
-            Customer: {order.user?.name} | Payment: {order.paymentMethod} ({order.paymentStatus})
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Update Order Status - {order.orderId}
+              </DialogTitle>
+              <div className="text-sm text-muted-foreground">
+                Customer: {order.user?.name} | Payment: {order.paymentMethod} ({order.paymentStatus})
+              </div>
+            </div>
+            {hasOrderedItems() && (
+              <Button
+                onClick={() => setShowShippingModal(true)}
+                className="flex items-center gap-2"
+                variant="outline"
+              >
+                <Truck className="h-4 w-4" />
+                Ship Order
+              </Button>
+            )}
           </div>
         </DialogHeader>
 
@@ -490,6 +522,15 @@ export const StatusUpdateModal = ({ order, onClose, onUpdate }) => {
             Cancel
           </Button>
         </div>
+
+        {/* Shipping Modal */}
+        {showShippingModal && (
+          <ShippingModal
+            order={order}
+            onClose={() => setShowShippingModal(false)}
+            onUpdate={handleShippingUpdate}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

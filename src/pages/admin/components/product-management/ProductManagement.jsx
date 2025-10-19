@@ -150,6 +150,33 @@ const ProductManagement = () => {
     updateURLParams(newFilters)
   }
 
+  // Handle clearing individual filter
+  const handleClearFilter = (key) => {
+    console.log(`Clearing filter: ${key}`)
+    
+    // Define default values for each filter type
+    const defaultValues = {
+      gender: 'all',
+      category: 'all',
+      color: 'all',
+      priceLte: '',
+      priceGte: '',
+      sort: 'newest',
+      isOnSale: 'all',
+      isActive: 'all',
+      search: ''
+    }
+    
+    const newFilters = { ...filters, [key]: defaultValues[key] }
+    setFilters(newFilters)
+    updateURLParams(newFilters)
+    
+    // If clearing search, also clear search term
+    if (key === 'search') {
+      setSearchTerm('')
+    }
+  }
+
   // Clear search
   const clearSearch = () => {
     setSearchTerm('')
@@ -270,6 +297,7 @@ const ProductManagement = () => {
         searchTerm={searchTerm}
         pagination={pagination}
         onFilterChange={handleFilterChange}
+        onClearFilter={handleClearFilter}
         onSearchChange={setSearchTerm}
         onClearSearch={clearSearch}
         onClearAllFilters={clearAllFilters}

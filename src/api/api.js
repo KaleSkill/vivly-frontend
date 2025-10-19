@@ -1,68 +1,66 @@
 import axios from 'axios';
-import { tokenManager } from '../utils/tokenManager';
 
 const Backend_url = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"
 const API_URL = `${Backend_url}/api`
 
 const api = axios.create({
     baseURL: API_URL,
-    // Removed withCredentials to use localStorage tokens instead of session cookies
+    withCredentials: true, // Include cookies in requests
 });
 
-// Add request interceptor to include token in headers
-api.interceptors.request.use((config) => {
+// Request interceptor - attach Bearer token if present
+api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
+    const shiprocketToken = localStorage.getItem('shiprocket_token');
     
-    // Only add token if it exists and is not expired
-    if (token && !tokenManager.isTokenExpired(token)) {
-        config.headers.Authorization = `Bearer ${token}`;
-    } else if (token && tokenManager.isTokenExpired(token)) {
-        // If token is expired, don't make the request - let it fail gracefully
-        console.warn('Token expired, skipping request:', config.url);
-        return Promise.reject(new Error('Token expired'));
+    if (token) {
+        config.headers = config.headers || {};
+        if (!config.headers['Authorization']) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+    }
+    
+    // Add Shiprocket token for Shiprocket API calls
+    if (shiprocketToken) {
+        config.headers['x-shiprocket-token'] = shiprocketToken;
     }
     
     return config;
 });
 
-// Add response interceptor for automatic token refresh
+// Response interceptor - handle token refresh
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
         
-        // Check if error is due to expired token (401 or 403) and we haven't already retried
-        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
-            originalRequest._retry = true;
-            
-            // Only try to refresh if we have a refresh token
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (!refreshToken) {
-                // No refresh token available, clear all tokens and reject
-                tokenManager.clearToken();
-                return Promise.reject(new Error('No refresh token available'));
-            }
-            
+        if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED') {
+            // Try to refresh token
             try {
-                // Use token manager to refresh token
-                const newToken = await tokenManager.refreshToken();
+                const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
                 
-                if (newToken) {
-                    // Update the original request with new token
-                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                if (refreshResponse.ok) {
+                    const data = await refreshResponse.json();
+                    if (data.data?.accessToken) {
+                        localStorage.setItem('token', data.data.accessToken);
+                        if (data.data.refreshToken) {
+                            localStorage.setItem('refreshToken', data.data.refreshToken);
+                        }
+                    }
+                    // Retry original request
                     return api(originalRequest);
+                } else {
+                    // Refresh failed, redirect to login
+                    localStorage.clear();
+                    window.location.href = '/login';
                 }
             } catch (refreshError) {
                 console.error('Token refresh failed:', refreshError);
-                // Clear tokens and redirect to login
-                tokenManager.clearToken();
-                return Promise.reject(refreshError);
             }
-        }
-        
-        // If refresh token is also expired or invalid, clear tokens
-        if (error.response?.status === 401) {
-            tokenManager.clearToken();
+        } else if (error.response?.status === 401) {
         }
         
         return Promise.reject(error);
@@ -75,7 +73,7 @@ api.interceptors.response.use(
 // Helper function to check if user is authenticated
 export const isAuthenticated = () => {
     const token = localStorage.getItem('token');
-    return token && !tokenManager.isTokenExpired(token);
+    return !!token;
 };
 
 //auth api
@@ -104,10 +102,20 @@ export const authApi = {
     },
 
     // Logout
-    logout: () => {
-        // Clear local token first
-        tokenManager.clearToken();
-        return api.get('/auth/logout');
+    logout: async () => {
+        try {
+            // Try to call backend logout first
+            const response = await api.get('/auth/logout');
+            return response;
+        } catch (error) {
+            console.log('Backend logout failed, continuing with local cleanup:', error);
+            // Even if backend logout fails, we should still clear local storage
+            // This ensures the user can login again
+            throw error; // Re-throw so the caller knows it failed
+        } finally {
+            // Always clear local storage regardless of backend response
+            localStorage.clear();
+        }
     },
 
     // Refresh token
@@ -504,6 +512,19 @@ export const adminApi = {
         // Reject refund request
         rejectRefund: (refundRequestId, rejectionReason) => {
             return api.put(`/admin/newOrders/refunds/${refundRequestId}/reject`, { rejectionReason });
+        },
+
+        // Shiprocket shipping steps
+        createAdhocOrderStep: (orderId, shippingData) => {
+            return api.post(`/admin/newOrders/${orderId}/create-adhoc-order`, shippingData);
+        },
+
+        assignAWBStep: (orderId) => {
+            return api.post(`/admin/newOrders/${orderId}/assign-awb`);
+        },
+
+        generatePickupStep: (orderId) => {
+            return api.post(`/admin/newOrders/${orderId}/generate-pickup`);
         }
     },
 
@@ -901,6 +922,47 @@ export const shiprocketApi = {
             headers: {
                 'x-shiprocket-token': token
             }
+        });
+    },
+
+    // Webhook management
+    getWebhookConfig: () => {
+        return api.get('/admin/shiprocket/webhooks/config');
+    },
+
+    testWebhook: () => {
+        return api.post('/admin/shiprocket/webhooks/test');
+    },
+
+    testWebhookLocal: (payload) => {
+        return api.post('/admin/shiprocket/webhooks/test-local', payload);
+    },
+
+    getWebhookTestStatus: () => {
+        return api.get('/admin/shiprocket/webhooks/test-status');
+    },
+
+    simulateWebhook: (payload) => {
+        return api.post('/admin/shiprocket/webhooks/simulate', payload);
+    },
+
+    getTunnelWebhookUrls: () => {
+        return api.get('/admin/shiprocket/webhooks/tunnel-urls');
+    },
+
+    // Order tracking and status management
+    getOrderTracking: (orderId) => {
+        return api.get(`/admin/shiprocket/orders/${orderId}/tracking`);
+    },
+
+    getOrdersByStatus: (status) => {
+        return api.get(`/admin/shiprocket/orders/status/${status}`);
+    },
+
+    updateOrderStatus: (orderId, status, trackingData) => {
+        return api.post(`/admin/shiprocket/orders/${orderId}/status`, {
+            status,
+            trackingData
         });
     }
 };

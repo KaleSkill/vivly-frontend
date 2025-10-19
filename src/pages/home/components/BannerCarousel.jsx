@@ -43,8 +43,12 @@ const BannerCarousel = () => {
   return (
     <section className="relative overflow-hidden bg-gray-50">
       {loading ? (
-        <div className="h-64 md:h-80 lg:h-96 bg-gray-200 animate-pulse flex items-center justify-center">
-          <p className="text-gray-500">Loading banners...</p>
+        <div className="h-64 md:h-80 lg:h-96 bg-gray-200 flex items-center justify-center">
+          <div className="w-full h-full flex flex-col gap-4 items-center justify-center px-4">
+            <div className="w-2/3 md:w-1/2 h-10 md:h-16 bg-gray-300 rounded animate-pulse"></div>
+            <div className="w-full h-32 md:h-48 bg-gray-300 rounded-lg animate-pulse"></div>
+            <div className="w-1/3 md:w-1/4 h-6 bg-gray-300 rounded animate-pulse"></div>
+          </div>
         </div>
       ) : banners.length > 0 ? (
         <div className="relative h-64 md:h-80 lg:h-96">

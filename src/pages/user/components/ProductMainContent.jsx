@@ -58,61 +58,6 @@ const ProductMainContent = ({
         </div>
       </div>
 
-      {/* Active Filters */}
-      {hasActiveFilters() && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
-          {filters.gender && filters.gender !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Gender: {filters.gender}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => handleFilterChange('gender', 'all')}
-              />
-            </Badge>
-          )}
-          {filters.category && filters.category !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Category: {filters.category}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => handleFilterChange('category', 'all')}
-              />
-            </Badge>
-          )}
-          {filters.color && filters.color !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Color: {filters.color}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => handleFilterChange('color', 'all')}
-              />
-            </Badge>
-          )}
-          {filters.isOnSale && filters.isOnSale !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Sale: {filters.isOnSale === 'true' ? 'On Sale' : 'Regular'}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => handleFilterChange('isOnSale', 'all')}
-              />
-            </Badge>
-          )}
-          {(filters.priceGte || filters.priceLte) && (
-            <Badge variant="secondary" className="gap-1">
-              Price: ₹{filters.priceGte || 0} - ₹{filters.priceLte || '∞'}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
-                onClick={() => {
-                  handleFilterChange('priceGte', filters.priceGte)
-                  handleFilterChange('priceLte', filters.priceLte)
-                }}
-              />
-            </Badge>
-          )}
-        </div>
-      )}
-
       {/* Products Grid */}
       {loading ? (
         <div className={`grid gap-4 ${

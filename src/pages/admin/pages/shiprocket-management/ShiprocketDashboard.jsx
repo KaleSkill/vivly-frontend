@@ -23,10 +23,9 @@ import {
   Eye,
   Loader2
 } from 'lucide-react'
-import { shiprocketApi } from '@/api/api'
+
 
 const ShiprocketDashboard = () => {
-  const [token, setToken] = useState(localStorage.getItem('shiprocket_token') || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dashboardData, setDashboardData] = useState({
@@ -88,11 +87,6 @@ const ShiprocketDashboard = () => {
     avgOrderValue: 801
   }
 
-  useEffect(() => {
-    if (token) {
-      loadDashboardData()
-    }
-  }, [token])
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -143,32 +137,7 @@ const ShiprocketDashboard = () => {
     return matchesSearch && matchesFilter
   })
 
-  if (!token) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Truck className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Shiprocket Dashboard</h1>
-            <p className="text-muted-foreground">Connect to Shiprocket to view your shipping dashboard</p>
-          </div>
-        </div>
-        
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <div className="text-center space-y-4">
-              <Truck className="h-16 w-16 text-muted-foreground mx-auto" />
-              <h3 className="text-lg font-semibold">Not Connected to Shiprocket</h3>
-              <p className="text-muted-foreground">Please connect to Shiprocket first to view the dashboard</p>
-              <Button onClick={() => window.location.href = '/admin/shiprocket'}>
-                Go to Shiprocket Settings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+
 
   return (
     <div className="space-y-6">

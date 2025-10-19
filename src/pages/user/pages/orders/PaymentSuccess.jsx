@@ -220,7 +220,7 @@ const PaymentSuccess = () => {
                         </div>
                         <div className="flex items-center gap-4 mt-2">
                           <span className="text-sm">Quantity: {item.quantity}</span>
-                          <span className="font-medium">₹{parseFloat(item.amount.price).toFixed(2)}</span>
+                          <span className="font-medium">₹{parseFloat(item.amount).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

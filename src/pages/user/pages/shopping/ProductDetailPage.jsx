@@ -41,7 +41,6 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [isInCart, setIsInCart] = useState(false)
   const [reviewStats, setReviewStats] = useState({
     averageRating: 0,
     totalReviews: 0,
@@ -136,9 +135,15 @@ const ProductDetailPage = () => {
   }
 
   const getAvailableSizes = () => {
-    const variant = getSelectedVariant()
+    const variant = getSelectedVariant();
+
+
+    
     if (!variant || !variant.sizes) return []
-    return variant.sizes.map(size => size.size)
+    // Arrange sizes in the order defined by the sizes array
+    return sizes.filter(size =>
+      variant.sizes.some(s => s.size === size)
+    )
   }
 
   const getStockForSelectedSize = () => {
@@ -301,9 +306,6 @@ const ProductDetailPage = () => {
             <div className="space-y-6">
               {/* Product Header */}
               <div className="space-y-2">
-                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Vibly
-                </a>
                 <h1 className="text-3xl md:text-4xl font-semibold">
                   {product.name}
                 </h1>
@@ -405,6 +407,12 @@ const ProductDetailPage = () => {
                 </div>
               </div>
 
+              {availableStock < 10 && availableStock > 0 && (
+                <p className="text-sm text-destructive">
+                  Only {availableStock} left in stock!
+                </p>
+              )}
+
               {/* Action Buttons */}
               <div className="space-y-3 pt-4">
                 <CartButton 
@@ -450,12 +458,6 @@ const ProductDetailPage = () => {
                   </div>
                 </div>
               </div>
-
-              {availableStock < 10 && availableStock > 0 && (
-                <p className="text-sm text-destructive">
-                  Only {availableStock} left in stock!
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -500,15 +502,12 @@ const ProductDetailPage = () => {
             </Accordion>
 
             {/* Review Form - Left Side */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Write a Review</h2>
               <ReviewForm 
                 productId={product._id} 
                 onReviewAdded={() => {
                   fetchReviewStats() // Refresh review stats after adding review
                 }}
               />
-            </div>
           </div>
 
           {/* Right Side - All Reviews */}

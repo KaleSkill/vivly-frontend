@@ -1,9 +1,9 @@
-import React from 'react'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Filter } from 'lucide-react'
-import ProductFilterSidebar from '@/pages/user/components/ProductFilterSidebar'
+import React from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Filter } from "lucide-react";
+import ProductFilterSidebar from "@/pages/user/components/ProductFilterSidebar";
 
 const ProductFilterLayout = ({
   children,
@@ -14,7 +14,8 @@ const ProductFilterLayout = ({
   colors,
   loading,
   hasActiveFilters,
-  getActiveFilterCount
+  getActiveFilterCount,
+  minMaxPrice,
 }) => {
   return (
     <div className="w-full h-screen flex">
@@ -22,7 +23,9 @@ const ProductFilterLayout = ({
       <div className="hidden lg:block w-80 flex-shrink-0 bg-background border-r">
         <div className="h-full overflow-y-auto scrollbar-hide p-4">
           <ProductFilterSidebar
-            minMaxPrice={{min: filters.priceGte, max: filters.priceLte}}
+            minMaxPrice={
+              minMaxPrice || { min: filters.priceGte, max: filters.priceLte }
+            }
             filters={filters}
             onFilterChange={onFilterChange}
             onClearFilters={onClearFilters}
@@ -44,7 +47,7 @@ const ProductFilterLayout = ({
                 {children.props?.pagination?.totalProducts || 0} products found
               </p>
             </div>
-            
+
             {/* Mobile Filter Button */}
             <div className="lg:hidden">
               <Sheet>
@@ -61,7 +64,12 @@ const ProductFilterLayout = ({
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80">
                   <ProductFilterSidebar
-                    minMaxPrice={{min: filters.priceGte, max: filters.priceLte}}
+                    minMaxPrice={
+                      minMaxPrice || {
+                        min: filters.priceGte,
+                        max: filters.priceLte,
+                      }
+                    }
                     filters={filters}
                     onFilterChange={onFilterChange}
                     onClearFilters={onClearFilters}
@@ -81,7 +89,7 @@ const ProductFilterLayout = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductFilterLayout
+export default ProductFilterLayout;

@@ -1,22 +1,17 @@
-import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Slider } from '@/components/ui/slider'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from '@/components/ui/accordion'
-import { 
-  X, 
-  Search,
-  Filter,
-  RefreshCw
-} from 'lucide-react'
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { X, Search, Filter, RefreshCw } from "lucide-react";
 
 const ProductFilterSidebar = ({
   minMaxPrice,
@@ -25,48 +20,88 @@ const ProductFilterSidebar = ({
   onClearFilters,
   categories = [],
   colors = [],
-  loading = false
 }) => {
-  const [priceRange, setPriceRange] = useState([minMaxPrice.min, minMaxPrice.max])
+  const safeMin = minMaxPrice?.min ?? 0;
+  const safeMax = minMaxPrice?.max ?? 10000;
 
-  // Update price range when filters change
+  // local price state which is only applied when user clicks Apply
+  const [priceRange, setPriceRange] = useState([
+    filters?.priceGte !== undefined && filters.priceGte !== null
+      ? Number(filters.priceGte)
+      : safeMin,
+    filters?.priceLte !== undefined && filters.priceLte !== null
+      ? Number(filters.priceLte)
+      : safeMax,
+  ]);
+
+  // keep local inputs in sync when external filters change
   useEffect(() => {
-    if (filters.priceGte || filters.priceLte) {
-      setPriceRange([
-        parseInt(filters.priceGte) || minMaxPrice.min,
-        parseInt(filters.priceLte) || minMaxPrice.max
-      ])
-    }
-  }, [filters.priceGte, filters.priceLte])
+    // prefer explicit filters values (allow zero). Otherwise use minMaxPrice bounds
+    const gte =
+      filters?.priceGte !== undefined && filters?.priceGte !== null
+        ? Number(filters.priceGte)
+        : null;
+    const lte =
+      filters?.priceLte !== undefined && filters?.priceLte !== null
+        ? Number(filters.priceLte)
+        : null;
 
+    setPriceRange([
+      gte !== null && Number.isFinite(gte)
+        ? Math.max(safeMin, Math.min(safeMax, gte))
+        : safeMin,
+      lte !== null && Number.isFinite(lte)
+        ? Math.max(safeMin, Math.min(safeMax, lte))
+        : safeMax,
+    ]);
+  }, [filters.priceGte, filters.priceLte, safeMin, safeMax]);
 
+  // Update local state only. Parent will be updated on Apply.
   const handlePriceRangeChange = (value) => {
-    setPriceRange(value)
-    onFilterChange('priceGte', value[0])
-    onFilterChange('priceLte', value[1])
-  }
+    const low = Math.max(
+      safeMin,
+      Math.min(safeMax, Number(value[0] ?? safeMin))
+    );
+    const high = Math.max(low, Math.min(safeMax, Number(value[1] ?? safeMax)));
+    setPriceRange([low, high]);
+  };
+
+  const applyPriceFilters = () => {
+    const [low, high] = priceRange;
+    // ensure numbers are sent
+    // send both values together so parent updates state once
+    onFilterChange({ priceGte: Number(low), priceLte: Number(high) });
+  };
+
+  const resetPriceToDefaults = () => {
+    setPriceRange([safeMin, safeMax]);
+    // reset price filters only
+    onFilterChange("priceGte", safeMin);
+    onFilterChange("priceLte", safeMax);
+  };
 
   const hasActiveFilters = () => {
     return Object.entries(filters).some(([key, value]) => {
-      if (key === 'priceGte' || key === 'priceLte') return value && value !== ''
-      return value && value !== 'all'
-    })
-  }
+      if (key === "priceGte" || key === "priceLte")
+        return value && value !== "";
+      return value && value !== "all";
+    });
+  };
 
   const getActiveFilterCount = () => {
-    let count = 0
-    if (filters.gender && filters.gender !== 'all') count++
-    if (filters.category && filters.category !== 'all') count++
-    if (filters.color && filters.color !== 'all') count++
-    if (filters.isOnSale && filters.isOnSale !== 'all') count++
-    if (filters.priceGte || filters.priceLte) count++
-    return count
-  }
+    let count = 0;
+    if (filters.gender && filters.gender !== "all") count++;
+    if (filters.category && filters.category !== "all") count++;
+    if (filters.color && filters.color !== "all") count++;
+    if (filters.isOnSale && filters.isOnSale !== "all") count++;
+    if (filters.priceGte || filters.priceLte) count++;
+    return count;
+  };
 
   const clearAllFilters = () => {
-    setPriceRange([minMaxPrice.min, minMaxPrice.max])
-    onClearFilters()
-  }
+    setPriceRange([minMaxPrice.min, minMaxPrice.max]);
+    onClearFilters();
+  };
 
   return (
     <div className="w-full space-y-2">
@@ -95,8 +130,11 @@ const ProductFilterSidebar = ({
       </div>
 
       {/* Accordion Filters */}
-      <Accordion type="multiple" defaultValue={["gender", "category", "color", "price", "sale"]} className="w-full">
-
+      <Accordion
+        type="multiple"
+        defaultValue={["gender", "category", "color", "price", "sale"]}
+        className="w-full"
+      >
         {/* Gender Filter */}
         <AccordionItem value="gender" className="border rounded-lg mb-2">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -105,16 +143,18 @@ const ProductFilterSidebar = ({
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-3">
               {[
-                { value: 'all', label: 'All' },
-                { value: 'men', label: 'Men' },
-                { value: 'women', label: 'Women' },
-                { value: 'unisex', label: 'Unisex' }
+                { value: "all", label: "All" },
+                { value: "men", label: "Men" },
+                { value: "women", label: "Women" },
+                { value: "unisex", label: "Unisex" },
               ].map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
                   <Checkbox
                     id={`gender-${option.value}`}
                     checked={filters.gender === option.value}
-                    onCheckedChange={() => onFilterChange('gender', option.value)}
+                    onCheckedChange={() =>
+                      onFilterChange("gender", option.value)
+                    }
                   />
                   <Label
                     htmlFor={`gender-${option.value}`}
@@ -138,10 +178,13 @@ const ProductFilterSidebar = ({
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="category-all"
-                  checked={filters.category === 'all'}
-                  onCheckedChange={() => onFilterChange('category', 'all')}
+                  checked={filters.category === "all"}
+                  onCheckedChange={() => onFilterChange("category", "all")}
                 />
-                <Label htmlFor="category-all" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="category-all"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   All Categories
                 </Label>
               </div>
@@ -150,7 +193,9 @@ const ProductFilterSidebar = ({
                   <Checkbox
                     id={`category-${category._id}`}
                     checked={filters.category === category.name}
-                    onCheckedChange={() => onFilterChange('category', category.name)}
+                    onCheckedChange={() =>
+                      onFilterChange("category", category.name)
+                    }
                   />
                   <Label
                     htmlFor={`category-${category._id}`}
@@ -174,10 +219,13 @@ const ProductFilterSidebar = ({
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="color-all"
-                  checked={filters.color === 'all'}
-                  onCheckedChange={() => onFilterChange('color', 'all')}
+                  checked={filters.color === "all"}
+                  onCheckedChange={() => onFilterChange("color", "all")}
                 />
-                <Label htmlFor="color-all" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="color-all"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   All Colors
                 </Label>
               </div>
@@ -186,7 +234,7 @@ const ProductFilterSidebar = ({
                   <Checkbox
                     id={`color-${color._id}`}
                     checked={filters.color === color.name}
-                    onCheckedChange={() => onFilterChange('color', color.name)}
+                    onCheckedChange={() => onFilterChange("color", color.name)}
                   />
                   <div className="flex items-center gap-2">
                     <div
@@ -222,13 +270,19 @@ const ProductFilterSidebar = ({
                   <Input
                     id="min-price"
                     type="number"
-                    min={minMaxPrice.min}
+                    min={safeMin}
                     max={priceRange[1]}
                     value={priceRange[0]}
                     onChange={(e) => {
-                      const value = Math.max(minMaxPrice.min, Math.min(priceRange[1], parseInt(e.target.value) || minMaxPrice.min))
-                      setPriceRange([value, priceRange[1]])
-                      onFilterChange('priceGte', value)
+                      const parsed = parseInt(e.target.value);
+                      const value = Math.max(
+                        safeMin,
+                        Math.min(
+                          priceRange[1],
+                          Number.isFinite(parsed) ? parsed : safeMin
+                        )
+                      );
+                      setPriceRange([value, priceRange[1]]);
                     }}
                     className="w-24"
                   />
@@ -241,34 +295,56 @@ const ProductFilterSidebar = ({
                     id="max-price"
                     type="number"
                     min={priceRange[0]}
-                    max={minMaxPrice.max}
+                    max={safeMax}
                     value={priceRange[1]}
                     onChange={(e) => {
-                      const value = Math.max(priceRange[0], Math.min(minMaxPrice.max, parseInt(e.target.value) || minMaxPrice.max))
-                      setPriceRange([priceRange[0], value])
-                      onFilterChange('priceLte', value)
+                      const parsed = parseInt(e.target.value);
+                      const value = Math.max(
+                        priceRange[0],
+                        Math.min(
+                          safeMax,
+                          Number.isFinite(parsed) ? parsed : safeMax
+                        )
+                      );
+                      setPriceRange([priceRange[0], value]);
                     }}
                     className="w-24"
                   />
                 </div>
               </div>
-              
+
               {/* Slider */}
               <div className="space-y-2">
                 <Slider
                   value={priceRange}
                   onValueChange={handlePriceRangeChange}
-                  max={minMaxPrice.max}
-                  min={minMaxPrice.min}
+                  max={safeMax}
+                  min={safeMin}
                   step={10}
                   className="w-full"
                 />
               </div>
-              
-              {/* Price Range Display */}
-              <p className="text-sm text-muted-foreground">
-                Showing products between ₹{priceRange[0]} and ₹{priceRange[1]}
-              </p>
+
+              {/* Action Buttons: only show when local range differs from applied filters */}
+              {(Number(filters.priceGte) !== Number(priceRange[0]) ||
+                Number(filters.priceLte) !== Number(priceRange[1])) && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={applyPriceFilters}
+                    className="px-4"
+                  >
+                    Apply
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetPriceToDefaults}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              )}
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -281,15 +357,17 @@ const ProductFilterSidebar = ({
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-3">
               {[
-                { value: 'all', label: 'All Products' },
-                { value: 'true', label: 'On Sale' },
-                { value: 'false', label: 'Regular Price' }
+                { value: "all", label: "All Products" },
+                { value: "true", label: "On Sale" },
+                { value: "false", label: "Regular Price" },
               ].map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
                   <Checkbox
                     id={`sale-${option.value}`}
                     checked={filters.isOnSale === option.value}
-                    onCheckedChange={() => onFilterChange('isOnSale', option.value)}
+                    onCheckedChange={() =>
+                      onFilterChange("isOnSale", option.value)
+                    }
                   />
                   <Label
                     htmlFor={`sale-${option.value}`}
@@ -304,7 +382,7 @@ const ProductFilterSidebar = ({
         </AccordionItem>
       </Accordion>
     </div>
-  )
-}
+  );
+};
 
-export default ProductFilterSidebar
+export default ProductFilterSidebar;

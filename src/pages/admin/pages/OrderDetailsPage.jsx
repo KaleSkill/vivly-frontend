@@ -7,6 +7,7 @@ import { adminApi } from '@/api/api';
 import { toast } from 'sonner';
 import { Package, CreditCard, MapPin, Calendar, User, Phone, Mail, Settings, ArrowLeft } from 'lucide-react';
 import { StatusUpdateModal } from '../components/StatusUpdateModal';
+import { ShippingModal } from '../components/ShippingModal';
 
 export const OrderDetailsPage = () => {
   const { orderId } = useParams();
@@ -96,8 +97,8 @@ export const OrderDetailsPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between max-md:flex-col max-md:items-center max-md:gap-2">
+        <div className="flex items-center gap-4 max-md:flex-col max-md:items-start max-md:gap-2">
           <Button 
             variant="outline" 
             size="sm" 
@@ -107,7 +108,7 @@ export const OrderDetailsPage = () => {
             Back to Orders
           </Button>
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+            <h1 className="text-3xl max-sm:text-lg font-bold flex items-center gap-2">
               <Package className="h-8 w-8" />
               Order Details - {orderDetails.orderId}
             </h1>
@@ -256,10 +257,10 @@ export const OrderDetailsPage = () => {
                       Color: {product.color?.name} | Size: {product.size}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Quantity: {product.quantity} | Price: ₹{parseFloat(product.amount?.price || 0).toFixed(2)}
+                      Quantity: {product.quantity} | Price: ₹{parseFloat(product.amount || 0).toFixed(2)}
                     </p>
                     <p className="font-medium">
-                      Total: ₹{parseFloat(product.amount?.totalAmount || 0).toFixed(2)}
+                      Total: ₹{parseFloat(product.amount || 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
@@ -295,46 +296,9 @@ export const OrderDetailsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Status History */}
-      {orderDetails.products && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Status History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {orderDetails.products.map((product, productIndex) => (
-                <div key={productIndex} className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-2">{product.name}</h4>
-                  {product.itemsGroupedByStatus && Object.entries(product.itemsGroupedByStatus).map(([status, items]) => (
-                    <div key={status} className="mb-3">
-                      <Badge className={getStatusBadgeColor(status)}>
-                        {status}
-                      </Badge>
-                      {items.map((item, itemIndex) => (
-                        <div key={itemIndex} className="ml-4 mt-2">
-                          {item.statusHistory?.map((history, historyIndex) => (
-                            <div key={historyIndex} className="text-sm text-muted-foreground">
-                              <span className="font-medium">{history.status}</span> - {history.note}
-                              <span className="ml-2">
-                                ({new Date(history.changedAt).toLocaleString()})
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Status Update Modal */}
       {showStatusModal && (
-        <StatusUpdateModal
+        <ShippingModal
           order={orderDetails}
           onClose={() => setShowStatusModal(false)}
           onUpdate={handleStatusUpdate}

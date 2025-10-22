@@ -37,7 +37,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED') {
             // Try to refresh token
             try {
-                const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+                const refreshResponse = await fetch(`${API_URL}/auth/refresh-token`, {
                     method: 'POST',
                     credentials: 'include'
                 });

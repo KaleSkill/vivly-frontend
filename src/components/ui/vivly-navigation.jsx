@@ -118,11 +118,11 @@ const ViblyNavigation = () => {
     const detectedForConsole = []
 
     categories.forEach(category => {
-      const categoryName = category.name?.toLowerCase() || ''
+      const categoryName = category.name || ''
      
-      const categorySlug = categoryName.replace(/\s+/g, '-')
+      const categorySlug = categoryName.replace(/\s+/g, '+')
      
-      const apiGender = (category.gender || '').toLowerCase()
+      const apiGender = (category.gender || '')
       const detectedGender = apiGender || detectGenderFromName(category.name)
 
      

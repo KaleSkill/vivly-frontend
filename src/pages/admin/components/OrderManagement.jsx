@@ -425,7 +425,7 @@ export const OrderManagement = () => {
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleUpdateStatus(order)}>
                               <Settings className="h-4 w-4 mr-2" />
-                              Update Status
+                              Manual Status Update
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

@@ -464,9 +464,14 @@ export const adminApi = {
             return api.get(`/admin/newOrders/${orderId}/items`);
         },
 
-        // Update order item status
-        updateOrderItemStatus: (data) => {
-            return api.put('/admin/newOrders/items/status', data);
+        // Update order item status (manual update)
+        updateOrderItemStatus: (itemId, data) => {
+            return api.put(`/admin/newOrders/items/${itemId}/update-status`, data);
+        },
+
+        // Get available status transitions for an item
+        getAvailableStatusTransitions: (itemId) => {
+            return api.get(`/admin/newOrders/items/${itemId}/available-transitions`);
         },
 
         // Process refund for returned item
